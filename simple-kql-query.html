@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple KQL Query - SRE TraceFlow</title>
+  
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/tools.css">
+<style>
+  .desc-content { max-width: 900px; margin:12px auto 0; overflow:hidden; max-height:0; opacity:0; transition:max-height .35s ease, opacity .35s ease; }
+  .desc-content.open { max-height: 200px; opacity:1; }
+  .hero { text-align: center; }
+</style>
+</head>
+<body class="simple-kql-query">
+  <div id="navbar-container"></div>
+
+  <div class="main-content">
+    <div class="hero">
+      <div class="hero-header">
+        <h1><img src="assets/icons/search_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Simple KQL Query</h1>
+        <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="pageDesc" class="desc-content open" aria-hidden="false">
+        <p>Generate KQL queries for Azure Log Analytics using any data identifiers. Simply paste your data (trace IDs, values, or any identifiers) and generate ready-to-use queries for log extraction.</p>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Global Time Range Selector -->
+      <div class="global-time-range">
+        <div class="time-range-header">
+          <div class="time-range-icon">
+            <img src="assets/icons/clock_white.svg" alt="" width="24" height="24">
+          </div>
+          <div class="time-range-header-content">
+            <div class="time-range-title-row">
+              <div class="time-range-title">Time Range</div>
+              <div class="time-preset-buttons">
+                <button class="time-preset-btn" data-value="5m">5m</button>
+                <button class="time-preset-btn" data-value="15m">15m</button>
+                <button class="time-preset-btn" data-value="1h">1h</button>
+                <button class="time-preset-btn" data-value="6h">6h</button>
+                <button class="time-preset-btn" data-value="12h">12h</button>
+                <button class="time-preset-btn active" data-value="24h">24h</button>
+                <button class="time-preset-btn" data-value="2d">2d</button>
+                <button class="time-preset-btn" data-value="7d">7d</button>
+                <button class="time-preset-btn" data-value="30d">30d</button>
+                <button class="time-preset-btn" data-value="custom">Custom</button>
+                <div class="time-duration-display" id="timeDuration">24h</div>
+              </div>
+              <select id="timePreset" onchange="applyTimePreset()" class="time-preset-select" style="display:none;">
+                <option value="5m">Last 5 minutes</option>
+                <option value="15m">Last 15 minutes</option>
+                <option value="1h">Last 1 hour</option>
+                <option value="6h">Last 6 hours</option>
+                <option value="12h">Last 12 hours</option>
+                <option value="24h" selected>Last 24 hours</option>
+                <option value="2d">Last 2 days</option>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            <div class="time-range-description">"Select time range filter, the system converts local time to UTC"</div>
+          </div>
+        </div>
+        <div class="time-range-controls">
+          <div class="time-inputs-row" id="customTimeInputs">
+            <input type="datetime-local" id="globalStart" class="time-input">
+            <span class="time-separator">to</span>
+            <input type="datetime-local" id="globalEnd" class="time-input">
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-section">
+        <div class="input-wrapper">
+          <label for="formattedTraces">Input Data</label>
+          <textarea id="formattedTraces" rows="6" placeholder='Paste your data here (trace IDs, values, or any identifiers)...&#10;&#10;Example:&#10;"abc123def456", "xyz789uvw012", "mno345pqr678"&#10;&#10;Or paste values separated by newlines - they will be automatically formatted.'></textarea>
+        </div>
+      </div>
+      
+      <div class="action-section">
+        <div class="button-group">
+          <button id="generateBtn" class="analyze-btn">
+            <img src="assets/icons/play_white.svg" alt="" width="16" height="16"> Generate KQL Query
+          </button>
+          <button class="copy" id="copyBtn"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Query</button>
+        </div>
+      </div>
+      
+      <div id="kqlResult" class="result"></div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDesc(){
+      const el = document.getElementById('pageDesc');
+      const isOpen = el.classList.contains('open');
+      if (isOpen) {
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.classList.add('open');
+        el.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    // Global time range management
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const tenAgo = new Date(now - 10 * 60000);
+      const toI = dt => {
+        const p = n => n.toString().padStart(2, '0');
+        return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
+      };
+      
+      // Initialize global time range
+      document.getElementById('globalStart').value = toI(tenAgo);
+      document.getElementById('globalEnd').value = toI(now);
+      updateDuration();
+
+      // Hide custom inputs by default and set default preset
+      document.getElementById('customTimeInputs').classList.remove('show');
+      document.getElementById('timePreset').value = '24h';
+      setQuickTime('24h');
+
+      // Add event listeners for duration updates
+      document.getElementById('globalStart').addEventListener('change', updateDuration);
+      document.getElementById('globalEnd').addEventListener('change', updateDuration);
+
+      // Generate button
+      document.getElementById('generateBtn').onclick = () => generateKQLQuery();
+      
+      // Copy button
+      document.getElementById('copyBtn').onclick = () => copyKQLResult();
+    });
+
+    function applyTimePreset() {
+      const preset = document.getElementById('timePreset').value;
+      const customInputs = document.getElementById('customTimeInputs');
+      
+      if (preset === 'custom') {
+        customInputs.classList.add('show');
+        return;
+      } else {
+        customInputs.classList.remove('show');
+        setQuickTime(preset);
+      }
+    }
+
+    // Handle time preset button clicks
+    document.addEventListener('DOMContentLoaded', function() {
+      const buttons = document.querySelectorAll('.time-preset-btn');
+      const select = document.getElementById('timePreset');
+      
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const value = this.getAttribute('data-value');
+          
+          // Update active state
+          buttons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Update select and trigger change
+          if (select) {
+            select.value = value;
+            applyTimePreset();
+          }
+        });
+      });
+    });
+
+    function setQuickTime(duration) {
+      const now = new Date();
+      let startTime;
+      
+      switch(duration) {
+        case '5m':
+          startTime = new Date(now - 5 * 60000);
+          break;
+        case '15m':
+          startTime = new Date(now - 15 * 60000);
+          break;
+        case '1h':
+          startTime = new Date(now - 60 * 60000);
+          break;
+        case '6h':
+          startTime = new Date(now - 6 * 60 * 60000);
+          break;
+        case '12h':
+          startTime = new Date(now - 12 * 60 * 60000);
+          break;
+        case '24h':
+          startTime = new Date(now - 24 * 60 * 60000);
+          break;
+        case '2d':
+          startTime = new Date(now - 2 * 24 * 60 * 60000);
+          break;
+        case '7d':
+          startTime = new Date(now - 7 * 24 * 60 * 60000);
+          break;
+        case '30d':
+          startTime = new Date(now - 30 * 24 * 60 * 60000);
+          break;
+      }
+      
+      const toI = dt => {
+        const p = n => n.toString().padStart(2, '0');
+        return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
+      };
+      
+      document.getElementById('globalStart').value = toI(startTime);
+      document.getElementById('globalEnd').value = toI(now);
+      updateDuration();
+    }
+    
+    function updateDuration() {
+      const start = document.getElementById('globalStart').value;
+      const end = document.getElementById('globalEnd').value;
+      
+      if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffMs = endDate - startDate;
+        const diffMins = Math.round(diffMs / 60000);
+        const diffHours = Math.round(diffMs / 3600000);
+        
+        let duration;
+        if (diffMins < 60) {
+          duration = `${diffMins}m`;
+        } else if (diffHours < 24) {
+          duration = `${diffHours}h`;
+        } else {
+          const diffDays = Math.round(diffMs / 86400000);
+          duration = `${diffDays}d`;
+        }
+        
+        document.getElementById('timeDuration').textContent = duration;
+      } else {
+        document.getElementById('timeDuration').textContent = '--';
+      }
+    }
+
+    function generateKQLQuery() {
+      const s = document.getElementById('globalStart').value;
+      const e = document.getElementById('globalEnd').value;
+      const input = document.getElementById('formattedTraces').value.trim();
+      const out = document.getElementById('kqlResult');
+      
+      if (!s || !e || !input) {
+        out.textContent = 'Please fill all fields and set time range';
+        out.style.color = '#ff6b6b';
+        return;
+      }
+      
+      // Parse input - handle both formatted (with quotes) and unformatted (newlines)
+      let traces;
+      if (input.includes('"') && input.includes(',')) {
+        // Already formatted with quotes
+        traces = input.split(',').map(t => t.trim()).filter(t => t).join(', ');
+      } else {
+        // Unformatted - split by newlines and format
+        traces = [...new Set(input.split('\n')
+          .map(l => l.trim())
+          .filter(l => l && l.toLowerCase() !== 'traceid'))]
+          .map(l => `"${l}"`).join(', ');
+      }
+      
+      if (!traces) {
+        out.textContent = 'Please enter valid data values';
+        out.style.color = '#ff6b6b';
+        return;
+      }
+      
+      const sUTC = new Date(s).toISOString();
+      const eUTC = new Date(e).toISOString();
+
+      const q = `prod_CL
+| where time_t between (datetime('${sUTC}') .. datetime('${eUTC}'))
+| where log_s has_any (${traces})
+| extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log_s)
+| extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log_s)
+| project TraceID, kubernetes_container_name_s, log_s, time_t, Fail_Status_Description
+| order by time_t desc`;
+      
+      out.textContent = q;
+      out.style.color = '#ffffff';
+      
+      // Show success animation
+      out.style.transform = 'scale(1.02)';
+      setTimeout(() => out.style.transform = 'scale(1)', 200);
+    }
+
+    function copyKQLResult() {
+      const t = document.getElementById('kqlResult').textContent;
+      if (t && !t.includes('Please fill') && !t.includes('Please enter')) {
+        const button = document.getElementById('copyBtn');
+        
+        const showSuccess = () => {
+          const originalText = button.innerHTML;
+          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
+          button.style.background = '#2a2a2a';
+          button.style.color = '#ffffff';
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '';
+            button.style.color = '';
+          }, 2000);
+        };
+        
+        const fallbackCopy = () => {
+          const textArea = document.createElement('textarea');
+          textArea.value = t;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            if (successful) {
+              showSuccess();
+              return true;
+            }
+            return false;
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return false;
+          }
+        };
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(t).then(() => {
+            showSuccess();
+          }).catch(() => {
+            if (!fallbackCopy()) {
+              alert('Failed to copy to clipboard');
+            }
+          });
+        } else {
+          if (!fallbackCopy()) {
+            alert('Failed to copy to clipboard');
+          }
+        }
+      }
+    }
+  </script>
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/navbar.js"></script>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
+

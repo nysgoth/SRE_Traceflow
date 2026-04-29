@@ -1,0 +1,19 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="traceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
+  <!-- Continuous trace path: 3 rounded rectangles connected -->
+  <!-- Left node -->
+  <rect x="1" y="7" width="8" height="9" rx="4" fill="url(#traceGrad)"/>
+  <!-- Bottom-right node -->
+  <rect x="14" y="15" width="8" height="8" rx="4" fill="url(#traceGrad)"/>
+  <!-- Top-right node -->
+  <rect x="14" y="1" width="8" height="8" rx="4" fill="url(#traceGrad)"/>
+  <!-- Vertical connector from bottom-right to top-right -->
+  <rect x="16" y="9" width="4" height="6" rx="2" fill="url(#traceGrad)"/>
+  <!-- Diagonal connector from left to bottom-right -->
+  <path d="M 9 11.5 L 11 13.5 L 14 16" stroke="url(#traceGrad)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

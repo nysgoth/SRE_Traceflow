@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced KQL Query - SRE TraceFlow</title>
+  
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/tools.css">
+  <!-- Offline-friendly: embed deployments to avoid fetch/file protocol issues -->
+  <script>
+    window.DEPLOYMENT_NAMES = [
+      "access-control",
+      "accessgroup-integration-service",
+      "arrangement-manager",
+      "audit-service",
+      "azure-blob-storage-connector",
+      "backbase-identity",
+      "billpay-service",
+      "card-manager",
+      "communication",
+      "confirmation",
+      "contact-manager",
+      "content-card",
+      "content-enricher",
+      "contentservices",
+      "contracts-flow",
+      "core-integration-service",
+      "dashboard",
+      "device-management-service",
+      "digital-lending",
+      "digital-lending-integration-service",
+      "documents-processing-flow",
+      "edge",
+      "employee",
+      "employee-app",
+      "engage-web-app",
+      "engagement",
+      "engagement-integration-service",
+      "event-bridge",
+      "fido-service",
+      "flow-party-profile-service",
+      "identity-integration-service",
+      "identity-proxy",
+      "ingress",
+      "legalentity-integration-service",
+      "lending-application",
+      "lending-hpa-flow",
+      "lending-offer-flow",
+      "limit",
+      "messages-service",
+      "metric",
+      "mobile-authentication",
+      "notifications-service",
+      "onboarding-flow",
+      "payment-order-service",
+      "payment-p2p",
+      "payment-trids",
+      "payment-type-service",
+      "plan-flow",
+      "provisioning",
+      "push-integration-service",
+      "realtime-engagement-orchestrator",
+      "register-manager",
+      "remote-config",
+      "remote-config-web-app",
+      "reset-password-flow",
+      "retail-app",
+      "risk-assessment-flow",
+      "selfenroll-flow",
+      "springbootadmin",
+      "stream-legal-entity",
+      "stream-product-catalog",
+      "stream-transactions",
+      "token-converter",
+      "transaction-category-collector",
+      "transaction-enricher",
+      "transaction-manager",
+      "user-manager",
+      "user-profile-manager",
+      "user-segment",
+      "user-segments-collector",
+      "web-authentication"
+    ];
+  </script>
+  <style>
+    /* Collapsible description under the title */
+    .desc-content {
+      max-width: 800px;
+      margin: 12px auto 0 auto;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.35s ease, opacity 0.35s ease;
+    }
+    .desc-content.open {
+      max-height: 200px; /* enough to show one short paragraph */
+      opacity: 1;
+    }
+    /* Deployment browse dropdown */
+    .deploy-wrap { position: relative; display: flex; gap: 6px; align-items: center; }
+    .deploy-hint { color: rgba(255,255,255,.7); font-size: 12px; margin-top: 4px; }
+    .deploy-btn { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; cursor: pointer; }
+    .deploy-btn:hover { background: rgba(255,255,255,.15); }
+    /* Dropdown positioned near center for better visibility */
+    .deploy-dropdown {
+      position: fixed;
+      top: 20vh;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.92);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.5);
+      width: min(90vw, 520px);
+      max-height: 60vh;
+      overflow: auto;
+      display: none;
+      z-index: 2000;
+    }
+    .deploy-dropdown.open { display: block; }
+    .deploy-item { padding: 8px 12px; color: #fff; cursor: pointer; }
+    .deploy-item:hover { background: rgba(255,255,255,.1); }
+  </style>
+  <script src="assets/js/navbar.js"></script>
+</head>
+<body class="advanced-kql">
+  <div id="navbar-container"></div>
+  
+  <div class="main-content">
+    <div class="hero">
+      <div class="hero-header">
+        <h1><img src="assets/icons/map_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Advanced KQL Query</h1>
+        <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="pageDesc" class="desc-content open" aria-hidden="false">
+      <p> - Advanced KQL query builder designed for Kubernetes microservice architecture with time range filtering and container-specific log analysis for Azure Log Analytics</p>
+    </div>
+  </div>
+
+  <div class="wrapper" style="display:flex;justify-content:center;width:100%;">
+    <!-- Extended Search Container -->
+    <div class="container" style="max-width:1200px;width:100%;margin:0 auto;padding:2.5% 2.5%;">
+      <!-- Global Time Range Selector -->
+      <div class="global-time-range">
+        <div class="time-range-header">
+          <div class="time-range-icon">
+            <img src="assets/icons/clock_white.svg" alt="" width="24" height="24">
+          </div>
+          <div class="time-range-header-content">
+            <div class="time-range-title-row">
+              <div class="time-range-title">Time Range</div>
+              <div class="time-preset-buttons">
+                <button class="time-preset-btn" data-value="5m">5m</button>
+                <button class="time-preset-btn" data-value="15m">15m</button>
+                <button class="time-preset-btn" data-value="1h">1h</button>
+                <button class="time-preset-btn" data-value="6h">6h</button>
+                <button class="time-preset-btn" data-value="12h">12h</button>
+                <button class="time-preset-btn active" data-value="24h">24h</button>
+                <button class="time-preset-btn" data-value="2d">2d</button>
+                <button class="time-preset-btn" data-value="7d">7d</button>
+                <button class="time-preset-btn" data-value="30d">30d</button>
+                <button class="time-preset-btn" data-value="custom">Custom</button>
+                <div class="time-duration-display" id="timeDuration">24h</div>
+              </div>
+              <select id="timePreset" onchange="applyTimePreset()" class="time-preset-select" style="display:none;">
+                <option value="5m">Last 5 minutes</option>
+                <option value="15m">Last 15 minutes</option>
+                <option value="1h">Last 1 hour</option>
+                <option value="6h">Last 6 hours</option>
+                <option value="12h">Last 12 hours</option>
+                <option value="24h" selected>Last 24 hours</option>
+                <option value="2d">Last 2 days</option>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            <div class="time-range-description">"Select time range filter, the system converts local time to UTC"</div>
+          </div>
+        </div>
+        <div class="time-range-controls">
+          <div class="time-inputs-row" id="customTimeInputs">
+            <input type="datetime-local" id="globalStart" class="time-input">
+            <span class="time-separator">to</span>
+            <input type="datetime-local" id="globalEnd" class="time-input">
+          </div>
+        </div>
+      </div>
+      <label for="containerName">Container Name:</label>
+      <div class="deploy-wrap">
+        <input list="deploymentList" id="containerName" placeholder="e.g., core-integration-service" value="core-integration-service" style="flex:1;">
+        <button type="button" id="browseDeployments" class="deploy-btn">Browse</button>
+        <datalist id="deploymentList"></datalist>
+        <div id="deploymentDropdown" class="deploy-dropdown" aria-hidden="true"></div>
+      </div>
+      <div class="deploy-hint">Start typing to search, or click Browse to pick from list.</div>
+      
+      <label for="searchValue">Search Value (has_any - pre-formatted):</label>
+      <input type="text" id="searchValue" placeholder='Enter pre-formatted values like: "value1", "value2", "value3"'>
+      
+      <label for="timeOffset">Time Offset (milliseconds):</label>
+      <input type="number" id="timeOffset" placeholder="e.g., 1" value="1" min="0" max="10000">
+      <small>This will be added/subtracted from min/max timestamps (default: 1ms)</small>
+      
+      <div class="button-group">
+        <button id="generateQuery"><span aria-hidden="true" style="display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" d="M8 5v14l11-7z"/></svg></span>Generate Query</button>
+        <button class="copy" id="copyQuery"><span aria-hidden="true" style="display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14h13c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></span>Copy Query</button>
+      </div>
+      
+      <div id="queryResult" class="result"></div>
+    </div>
+  </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+  <script>
+    let DEPLOYMENT_NAMES = Array.isArray(window.DEPLOYMENT_NAMES) ? window.DEPLOYMENT_NAMES.slice() : [];
+    async function populateDeployments(){
+      try {
+        if (!DEPLOYMENT_NAMES.length && location.protocol.startsWith('http')) {
+          // Optional fetch only when served over http(s)
+          const resp = await fetch('assets/deployments.txt');
+          if (resp.ok) {
+            const text = await resp.text();
+            DEPLOYMENT_NAMES = Array.from(new Set(text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)));
+          }
+        }
+      } catch(e){ /* ignore */ }
+      const dl = document.getElementById('deploymentList');
+      dl.innerHTML = '';
+      DEPLOYMENT_NAMES.forEach(n => {
+        const opt = document.createElement('option'); opt.value = n; dl.appendChild(opt);
+      });
+      buildDeploymentDropdown(DEPLOYMENT_NAMES);
+    }
+
+    function buildDeploymentDropdown(list){
+      const dd = document.getElementById('deploymentDropdown');
+      dd.innerHTML = list.map(n => `<div class="deploy-item" data-name="${n}">${n}</div>`).join('');
+      dd.querySelectorAll('.deploy-item').forEach(el => el.addEventListener('click', () => {
+        const val = el.getAttribute('data-name');
+        const input = document.getElementById('containerName');
+        input.value = val;
+        toggleDropdown(false);
+      }));
+    }
+
+    function toggleDropdown(open){
+      const dd = document.getElementById('deploymentDropdown');
+      if(open){ dd.classList.add('open'); dd.setAttribute('aria-hidden','false'); }
+      else { dd.classList.remove('open'); dd.setAttribute('aria-hidden','true'); }
+    }
+
+    function toggleDesc() {
+      const el = document.getElementById('pageDesc');
+      const isOpen = el.classList.contains('open');
+      if (isOpen) {
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.classList.add('open');
+        el.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    // Ensure desc-toggle button stays fixed
+    function ensureButtonFixed() {
+      const btn = document.querySelector('.desc-toggle');
+      if (btn) {
+        btn.style.position = 'fixed';
+        btn.style.top = '80px';
+        btn.style.right = '20px';
+        btn.style.zIndex = '9999';
+        btn.style.margin = '0';
+      }
+    }
+    
+    // Initialize default time values
+    document.addEventListener('DOMContentLoaded', () => {
+      ensureButtonFixed();
+      // Re-enforce on scroll/resize in case something tries to change it
+      window.addEventListener('scroll', ensureButtonFixed);
+      window.addEventListener('resize', ensureButtonFixed);
+      populateDeployments();
+      // browse button
+      const browseBtn = document.getElementById('browseDeployments');
+      const dd = document.getElementById('deploymentDropdown');
+      const input = document.getElementById('containerName');
+      browseBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(dd.classList.contains('open')) toggleDropdown(false); else toggleDropdown(true);
+      });
+      document.addEventListener('click', (e)=>{
+        if(!dd.contains(e.target) && e.target !== browseBtn) toggleDropdown(false);
+      });
+      // filter dropdown items as user types
+      input.addEventListener('input', ()=>{
+        const q = input.value.toLowerCase();
+        const filtered = DEPLOYMENT_NAMES.filter(n => n.toLowerCase().includes(q));
+        buildDeploymentDropdown(filtered);
+      });
+      // Initialize global time range
+      const now = new Date();
+      const tenAgo = new Date(now - 10 * 60000);
+      const toI = dt => {
+        const p = n => n.toString().padStart(2,'0');
+        return `${dt.getFullYear()}-${p(dt.getMonth()+1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
+      };
+      
+      document.getElementById('globalStart').value = toI(tenAgo);
+      document.getElementById('globalEnd').value = toI(now);
+      updateDuration();
+
+      // Hide custom inputs by default and set default preset
+      document.getElementById('customTimeInputs').classList.remove('show');
+      document.getElementById('timePreset').value = '24h'; // Default to 24 hours
+      setQuickTime('24h');
+
+      // Add event listeners for duration updates
+      document.getElementById('globalStart').addEventListener('change', updateDuration);
+      document.getElementById('globalEnd').addEventListener('change', updateDuration);
+      
+      // Set up event listeners
+      document.getElementById('generateQuery').onclick = generateExtendedQuery;
+      document.getElementById('copyQuery').onclick = copyExtendedQuery;
+    });
+
+    function applyTimePreset() {
+      const preset = document.getElementById('timePreset').value;
+      const customInputs = document.getElementById('customTimeInputs');
+      
+      if (preset === 'custom') {
+        customInputs.classList.add('show');
+        return;
+      } else {
+        customInputs.classList.remove('show');
+        setQuickTime(preset);
+      }
+    }
+
+    // Handle time preset button clicks
+    document.addEventListener('DOMContentLoaded', function() {
+      const buttons = document.querySelectorAll('.time-preset-btn');
+      const select = document.getElementById('timePreset');
+      
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const value = this.getAttribute('data-value');
+          
+          // Update active state
+          buttons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Update select and trigger change
+          if (select) {
+            select.value = value;
+            applyTimePreset();
+          }
+        });
+      });
+    });
+
+    function setQuickTime(duration) {
+      const now = new Date();
+      let startTime;
+      
+      switch(duration) {
+        case '5m': startTime = new Date(now - 5 * 60000); break;
+        case '15m': startTime = new Date(now - 15 * 60000); break;
+        case '1h': startTime = new Date(now - 60 * 60000); break;
+        case '6h': startTime = new Date(now - 6 * 60 * 60000); break;
+        case '12h': startTime = new Date(now - 12 * 60 * 60000); break;
+        case '24h': startTime = new Date(now - 24 * 60 * 60000); break;
+        case '2d': startTime = new Date(now - 2 * 24 * 60 * 60000); break;
+        case '7d': startTime = new Date(now - 7 * 24 * 60 * 60000); break;
+        case '30d': startTime = new Date(now - 30 * 24 * 60 * 60000); break;
+      }
+      
+      const toI = dt => {
+        const p = n => n.toString().padStart(2,'0');
+        return `${dt.getFullYear()}-${p(dt.getMonth()+1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
+      };
+      
+      document.getElementById('globalStart').value = toI(startTime);
+      document.getElementById('globalEnd').value = toI(now);
+      updateDuration();
+    }
+    
+    function updateDuration() {
+      const start = document.getElementById('globalStart').value;
+      const end = document.getElementById('globalEnd').value;
+      
+      if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffMs = endDate - startDate;
+        const diffMins = Math.round(diffMs / 60000);
+        const diffHours = Math.round(diffMs / 3600000);
+        
+        let duration;
+        if (diffMins < 60) {
+          duration = `${diffMins}m`;
+        } else if (diffHours < 24) {
+          duration = `${diffHours}h`;
+        } else {
+          const diffDays = Math.round(diffMs / 86400000);
+          duration = `${diffDays}d`;
+        }
+        
+        document.getElementById('timeDuration').textContent = duration;
+      } else {
+        document.getElementById('timeDuration').textContent = '--';
+      }
+    }
+
+    function generateExtendedQuery() {
+      const validation = validateFields([
+        { id: 'containerName', message: 'Please enter container name' },
+        { id: 'timeOffset', message: 'Please enter time offset' }
+      ]);
+      
+      const result = document.getElementById('queryResult');
+      
+      if (!validation.valid) {
+        showError(result, validation.message);
+        return;
+      }
+      
+      const containerName = document.getElementById('containerName').value.trim();
+      const startTime = document.getElementById('globalStart').value;
+      const endTime = document.getElementById('globalEnd').value;
+      const searchValue = document.getElementById('searchValue').value.trim();
+      const timeOffset = document.getElementById('timeOffset').value || '1';
+      
+      if (!startTime || !endTime) {
+        showError(result, 'Please set time range using the time selector above');
+        return;
+      }
+      
+      const startUTC = new Date(startTime).toISOString();
+      const endUTC = new Date(endTime).toISOString();
+      
+      // Build the time_range query conditionally
+      let timeRangeQuery = `let time_range = prod_CL
+| where kubernetes_container_name_s has container_name
+| where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))`;
+      
+      // Only add has_any line if searchValue has data
+      if (searchValue) {
+        timeRangeQuery += `\n| where log_s has_any (${searchValue})`;
+      }
+      
+      timeRangeQuery += `\n| summarize min_timestamp = min(time_t), max_timestamp = max(time_t);`;
+      
+      const query = `let container_name = "${containerName}";
+${timeRangeQuery}
+let min_time = toscalar(time_range | project min_timestamp) - ${timeOffset}ms;
+let max_time = toscalar(time_range | project max_timestamp) + ${timeOffset}ms;
+prod_CL
+| where time_t between (min_time .. max_time)
+| where kubernetes_container_name_s has container_name
+| project time_t, log_s
+| order by time_t asc`;
+      
+      showSuccess(result, query);
+    }
+
+    function copyExtendedQuery() {
+      const queryText = document.getElementById('queryResult').textContent;
+      const button = event.target.closest('button');
+      copyToClipboard(queryText, button);
+    }
+  </script>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

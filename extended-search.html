@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Extended Search - SRE Helper Tool</title>
+  
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/tools.css">
+<style>
+  .desc-content { max-width: 800px; margin: 12px auto 0; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .35s ease, opacity .35s ease; }
+  .desc-content.open { max-height: 200px; opacity: 1; }
+  .hero { text-align: center; }
+</style>
+</head>
+<body class="extended-search">
+  <div id="navbar-container"></div>
+
+  <div class="main-content">
+    <div class="hero">
+      <div class="hero-header">
+        <h1><img src="assets/icons/search_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Extended Search</h1>
+        <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="pageDesc" class="desc-content open" aria-hidden="false">
+      <p>Advanced KQL query builder with time range filtering and container-specific log analysis for Azure Log Analytics</p>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <!-- Extended Search Container -->
+    <div class="container">
+      <label for="containerName">Container Name:</label>
+      <input type="text" id="containerName" placeholder="e.g., core-integration-service" value="core-integration-service">
+      
+      <label for="startTime">Start Time:</label>
+      <input type="datetime-local" id="startTime">
+      
+      <label for="endTime">End Time:</label>
+      <input type="datetime-local" id="endTime">
+      
+      <label for="searchValue">Search Value (contains):</label>
+      <input type="text" id="searchValue" placeholder="e.g., 7204611">
+      
+      <div class="button-group">
+        <button id="generateQuery"><img src="assets/icons/play_white.svg" alt="" width="14" height="14">Generate Query</button>
+        <button class="copy" id="copyQuery"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14">Copy Query</button>
+      </div>
+      
+      <div id="queryResult" class="result"></div>
+    </div>
+  </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+  <script>
+    function toggleDesc(){
+      const el = document.getElementById('pageDesc');
+      const isOpen = el.classList.contains('open');
+      if (isOpen) {
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.classList.add('open');
+        el.setAttribute('aria-hidden', 'false');
+      }
+    }
+    // Initialize default time values
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeTimeInputs('startTime', 'endTime');
+      
+      // Set up event listeners
+      document.getElementById('generateQuery').onclick = generateExtendedQuery;
+      document.getElementById('copyQuery').onclick = copyExtendedQuery;
+    });
+
+    function generateExtendedQuery() {
+      const validation = validateFields([
+        { id: 'containerName', message: 'Please enter container name' },
+        { id: 'startTime', message: 'Please select start time' },
+        { id: 'endTime', message: 'Please select end time' },
+        { id: 'searchValue', message: 'Please enter search value' }
+      ]);
+      
+      const result = document.getElementById('queryResult');
+      
+      if (!validation.valid) {
+        showError(result, validation.message);
+        return;
+      }
+      
+      const containerName = document.getElementById('containerName').value.trim();
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+      const searchValue = document.getElementById('searchValue').value.trim();
+      
+      const startUTC = new Date(startTime).toISOString();
+      const endUTC = new Date(endTime).toISOString();
+      
+      const query = `let container_name = "${containerName}";
+let time_range = prod_CL
+| where kubernetes_container_name_s has container_name
+| where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))
+| where log_s contains "${searchValue}"
+| summarize min_timestamp = min(time_t), max_timestamp = max(time_t);
+let min_time = toscalar(time_range | project min_timestamp) - 1ms;
+let max_time = toscalar(time_range | project max_timestamp) + 1ms;
+prod_CL
+| where time_t between (min_time .. max_time)
+| where kubernetes_container_name_s has container_name
+| project time_t, log_s
+| order by time_t asc`;
+      
+      showSuccess(result, query);
+    }
+
+    function copyExtendedQuery() {
+      const queryText = document.getElementById('queryResult').textContent;
+      const button = event.target.closest('button');
+      copyToClipboard(queryText, button);
+    }
+  </script>
+  <script src="assets/js/navbar.js"></script>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utilities - SRE TraceFlow</title>
+  
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/tools.css">
+<style>
+  .desc-content { max-width: 900px; margin:12px auto 0; overflow:hidden; max-height:0; opacity:0; transition:max-height .35s ease, opacity .35s ease; }
+  .desc-content.open { max-height: 200px; opacity:1; }
+  .hero { text-align: center; }
+  .utilities-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 950px;
+    margin: 0 auto 50px auto;
+    padding: 0 20px;
+  }
+  .utilities-container {
+    max-width: 100%;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 2.5% 2.5% !important;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(10px) saturate(180%);
+    border: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-radius: 29px;
+  }
+  .utilities-container h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .utilities-container p {
+    margin: 0 auto 20px auto;
+    text-align: center;
+    opacity: 0.8;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+    font-size: 14px;
+  }
+  .utilities-container .input-section {
+    flex-shrink: 0;
+    margin: 0 0 15px 0;
+    width: 100%;
+  }
+  .utilities-container .input-wrapper {
+    width: 100%;
+  }
+  .utilities-container .input-wrapper input,
+  .utilities-container .input-wrapper textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .utilities-container .input-wrapper textarea {
+    resize: none;
+    overflow-y: auto;
+    min-height: 50px;
+    max-height: 200px;
+  }
+  .utilities-container .action-section {
+    margin: 0 0 15px 0;
+    width: 100%;
+  }
+  .utilities-container .analyze-btn {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .utilities-container .result {
+    flex: 1;
+    min-height: 40px;
+    margin: 0 0 15px 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .utilities-container .button-group {
+    margin-top: auto !important;
+    margin-bottom: 0;
+    width: 100%;
+  }
+  .utilities-container .button-group button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  @media (max-width: 768px) {
+    .utilities-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body class="utilities">
+  <div id="navbar-container"></div>
+
+  <div class="main-content">
+    <div class="hero">
+      <div class="hero-header">
+        <h1><img src="assets/icons/wrench_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Utilities</h1>
+        <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="pageDesc" class="desc-content open" aria-hidden="false">
+        <p>Utility tools for quick data transformation and formatting. Includes Client ID transformation, JSON formatting, and other helpful utilities.</p>
+      </div>
+    </div>
+
+    <div class="utilities-grid">
+      <!-- Client ID Transform -->
+      <div class="container utilities-container">
+      <h2><img src="assets/icons/id-card_white.svg" alt="" style="width:28px;height:28px;margin-right:8px;vertical-align:middle;">Client ID Transform</h2>
+      <p>Quick client ID transformation and formatting. The database requires 17 digits, so shorter IDs will be padded with leading zeros.</p>
+      
+      <div class="input-section">
+        <div class="input-wrapper">
+          <input type="text" id="numberInput" placeholder="Enter client ID (e.g., 739564)">
+        </div>
+      </div>
+      
+      <div class="action-section">
+        <button onclick="formatNumber()" class="analyze-btn">
+          <img src="assets/icons/play_white.svg" alt="" width="16" height="16"> Transform
+        </button>
+      </div>
+      
+      <div id="result" class="result" style="font-family: 'Consolas', 'Monaco', monospace; text-align: center; min-height: 40px; display: flex; align-items: center; justify-content: center;"></div>
+      
+      <div class="button-group">
+        <button onclick="copyResult()" class="copy">
+          <img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result
+        </button>
+      </div>
+      </div>
+
+      <!-- Comma-Separated Formatter -->
+      <div class="container utilities-container">
+      <h2><img src="assets/icons/wrench_white.svg" alt="" style="width:28px;height:28px;margin-right:8px;vertical-align:middle;">Comma-Separated Formatter</h2>
+      <p>Format values into a clean comma-separated string with quotes and removes duplicate entries for easier KQL search</p>
+      
+      <div class="input-section">
+        <div class="input-wrapper">
+          <textarea id="commaFormatterInput" rows="2" placeholder="Enter values separated by newlines..."></textarea>
+        </div>
+      </div>
+      
+      <div class="action-section">
+        <button onclick="formatCommaSeparated()" class="analyze-btn">
+          <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
+        </button>
+      </div>
+      
+      <div id="commaFormatterResult" class="result" style="font-family: 'Consolas', 'Monaco', monospace; text-align: left; min-height: 40px; padding: 15px; word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; max-height: none !important; overflow-y: visible !important; height: auto !important;"></div>
+      
+      <div class="button-group">
+        <button onclick="copyCommaFormatterResult()" class="copy">
+          <img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result
+        </button>
+      </div>
+      </div>
+    </div>
+
+    <!-- JSON Pretty Formatter -->
+    <div class="container utilities-container" style="max-width: 1200px; margin: 60px auto 0; min-height: auto;">
+      <h2 style="margin-top: 0; margin-bottom: 12px; text-align: center;"><img src="assets/icons/wrench_white.svg" alt="" style="width:28px;height:28px;margin-right:8px;vertical-align:middle;">JSON Pretty Formatter</h2>
+      <p style="margin: 0 auto 30px auto; text-align: center; opacity: 0.8; max-width: 100%; width: 100%; display: block; font-size: 14px;">Format and prettify JSON with customizable indentation. Supports both pretty-printing and compact formatting with strict JSON validation.</p>
+      
+      <div class="input-section" style="margin: 0 0 25px 0; width: 100%;">
+        <div class="input-wrapper" style="width: 100%;">
+          <label for="jsonInput" style="display: block; font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 8px; margin-top: 0;">Input (one‑line JSON or compact JSON)</label>
+          <textarea id="jsonInput" rows="4" placeholder='Paste your one-line JSON here, e.g. {"a":1,"b":[2,3]}' style="width: 100%; box-sizing: border-box; resize: vertical; min-height: 120px;"></textarea>
+        </div>
+      </div>
+      
+      <div class="json-controls" style="display: flex; gap: 30px; flex-wrap: wrap; align-items: center; margin: 0 0 35px 0; padding: 20px; background: rgba(0, 0, 0, 0.2); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; box-sizing: border-box;">
+        <div style="flex: 1; display: flex; gap: 30px; align-items: center; flex-wrap: nowrap; min-width: 0; justify-content: flex-start;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <label style="font-size: 13px; margin: 0; white-space: nowrap; font-weight: 500; color: rgba(255, 255, 255, 0.9);">Indent</label>
+            <input id="jsonIndent" type="number" min="0" max="8" value="2" style="width: 70px; margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 13px; flex-shrink: 0;" />
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <label style="font-size: 13px; margin: 0; white-space: nowrap; font-weight: 500; color: rgba(255, 255, 255, 0.9);">Ensure ASCII</label>
+            <select id="jsonAscii" style="margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 13px; cursor: pointer; width: 180px; flex-shrink: 0;">
+              <option value="false" selected>False (keep UTF‑8)</option>
+              <option value="true">True (escape non‑ASCII)</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+            <label style="font-size: 13px; margin: 0; white-space: nowrap; font-weight: 500; color: rgba(255, 255, 255, 0.9);">Mode</label>
+            <select id="jsonMode" style="margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 13px; cursor: pointer; width: 160px; flex-shrink: 0;">
+              <option value="pretty" selected>Pretty (spaced)</option>
+              <option value="compact">Compact (one line)</option>
+            </select>
+          </div>
+        </div>
+        <div class="button-group" style="margin: 0; display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0;">
+          <button class="analyze-btn" id="jsonFormatBtn" style="width: auto; padding: 10px 18px;">
+            <img src="assets/icons/play_white.svg" alt="" width="16" height="16"> Format
+          </button>
+          <button class="copy" id="jsonCopyBtn" style="width: auto; padding: 10px 18px;">
+            <img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy
+          </button>
+          <button class="copy" id="jsonDownloadBtn" style="width: auto; padding: 10px 18px;">
+            <img src="assets/icons/download_white.svg" alt="" width="14" height="14"> Download
+          </button>
+          <button class="copy" id="jsonClearBtn" style="width: auto; padding: 10px 18px; background: #dc3545; border-color: #dc3545;">
+            Clear
+          </button>
+        </div>
+      </div>
+      <small style="margin: 0 0 30px 0; display: block; color: rgba(255, 255, 255, 0.6); font-size: 12px; font-style: italic;">Strict JSON parser: invalid JSON will show a clear error with location.</small>
+
+      <div class="input-section" style="margin: 0 0 20px 0; width: 100%;">
+        <div class="input-wrapper" style="width: 100%;">
+          <label for="jsonOutput" style="display: block; font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 8px; margin-top: 0;">Output</label>
+          <pre id="jsonOutput" style="background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px; padding: 18px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.6; color: #ffffff; white-space: pre-wrap; word-wrap: break-word; max-height: 50vh; overflow: auto; min-height: 150px; margin: 0;" aria-live="polite"></pre>
+          <div id="jsonStatus" style="margin-top: 12px; font-size: 13px; min-height: 20px;"></div>
+        </div>
+      </div>
+      
+      <div style="margin: 0; padding: 15px; background: rgba(102, 126, 234, 0.08); border-left: 3px solid rgba(102, 126, 234, 0.5); border-radius: 0 8px 8px 0; font-size: 12px; color: rgba(255, 255, 255, 0.7); font-style: italic; line-height: 1.6;">
+        <strong style="color: rgba(255, 255, 255, 0.9);">Tips:</strong> If your program prints an <em>escaped JSON string</em> (e.g., <code style="background: rgba(255, 255, 255, 0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; color: rgba(255, 255, 255, 0.9);">"{\"x\":1}"</code>), click "Format" twice:
+        first to unquote, second to pretty‑print—this page detects and handles that case automatically.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDesc(){
+      const el = document.getElementById('pageDesc');
+      const isOpen = el.classList.contains('open');
+      if (isOpen) {
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.classList.add('open');
+        el.setAttribute('aria-hidden', 'false');
+      }
+    }
+    
+    // Auto-resize textarea
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const commaFormatterInput = document.getElementById('commaFormatterInput');
+      if (commaFormatterInput) {
+        commaFormatterInput.addEventListener('input', () => {
+          autoResizeTextarea(commaFormatterInput);
+        });
+        // Initial resize
+        autoResizeTextarea(commaFormatterInput);
+      }
+    });
+    
+    // Client ID formatting functions
+    function formatNumber() {
+      const input = document.getElementById('numberInput');
+      const result = document.getElementById('result');
+      const v = input.value.trim().replace(/\D/g,'');
+      
+      if (!v) {
+        result.textContent = 'Please enter a number';
+        result.style.color = '#ff6b6b';
+        return;
+      }
+      
+      if (v.length > 17) {
+        result.textContent = 'Number is too long! Maximum 17 digits allowed.';
+        result.style.color = '#ff6b6b';
+        return;
+      }
+      
+      const formatted = v.padStart(17, '0');
+      result.textContent = formatted;
+      result.style.color = '#ffffff';
+      
+      // Show success animation
+      result.style.transform = 'scale(1.02)';
+      setTimeout(() => result.style.transform = 'scale(1)', 200);
+    }
+    
+    function copyResult() {
+      const t = document.getElementById('result').textContent;
+      if (t && t !== 'Please enter a number' && !t.includes('too long')) {
+        const button = event.target.closest('button');
+        
+        // Function to show success feedback
+        const showSuccess = () => {
+          const originalText = button.innerHTML;
+          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
+          button.style.background = '#2a2a2a';
+          button.style.color = '#ffffff';
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '';
+            button.style.color = '';
+          }, 2000);
+        };
+        
+        // Fallback method using execCommand
+        const fallbackCopy = () => {
+          const textArea = document.createElement('textarea');
+          textArea.value = t;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            if (successful) {
+              showSuccess();
+              return true;
+            }
+            return false;
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return false;
+          }
+        };
+        
+        // Try modern clipboard API first
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(t).then(() => {
+            showSuccess();
+          }).catch(() => {
+            if (!fallbackCopy()) {
+              alert('Failed to copy to clipboard');
+            }
+          });
+        } else {
+          if (!fallbackCopy()) {
+            alert('Failed to copy to clipboard');
+          }
+        }
+      }
+    }
+
+    // Comma-Separated Formatter functions
+    function formatCommaSeparated() {
+      const input = document.getElementById('commaFormatterInput');
+      const result = document.getElementById('commaFormatterResult');
+      const raw = input.value.trim();
+      
+      if (!raw) {
+        result.textContent = 'Please enter values';
+        result.style.color = '#ff6b6b';
+        return;
+      }
+      
+      const lines = [...new Set(raw.split('\n')
+        .map(l => l.trim())
+        .filter(l => l && l.toLowerCase() !== 'traceid'))];
+      
+      if (lines.length === 0) {
+        result.textContent = 'No valid values found';
+        result.style.color = '#ff6b6b';
+        return;
+      }
+      
+      const formatted = lines.map(l => `"${l}"`).join(', ');
+      result.textContent = formatted;
+      result.style.color = '#ffffff';
+      
+      // Show success animation
+      result.style.transform = 'scale(1.02)';
+      setTimeout(() => result.style.transform = 'scale(1)', 200);
+    }
+    
+    function copyCommaFormatterResult() {
+      const t = document.getElementById('commaFormatterResult').textContent;
+      if (t && !t.includes('Please enter') && !t.includes('No valid')) {
+        const button = event.target.closest('button');
+        
+        const showSuccess = () => {
+          const originalText = button.innerHTML;
+          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
+          button.style.background = '#2a2a2a';
+          button.style.color = '#ffffff';
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '';
+            button.style.color = '';
+          }, 2000);
+        };
+        
+        const fallbackCopy = () => {
+          const textArea = document.createElement('textarea');
+          textArea.value = t;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            if (successful) {
+              showSuccess();
+              return true;
+            }
+            return false;
+          } catch (err) {
+            document.body.removeChild(textArea);
+            return false;
+          }
+        };
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(t).then(() => {
+            showSuccess();
+          }).catch(() => {
+            if (!fallbackCopy()) {
+              alert('Failed to copy to clipboard');
+            }
+          });
+        } else {
+          if (!fallbackCopy()) {
+            alert('Failed to copy to clipboard');
+          }
+        }
+      }
+    }
+
+    // JSON Pretty Formatter functions
+    const $json = id => document.getElementById(id);
+    const jsonInputEl = $json('jsonInput');
+    const jsonOutputEl = $json('jsonOutput');
+    const jsonStatusEl = $json('jsonStatus');
+    const jsonIndentEl = $json('jsonIndent');
+    const jsonAsciiEl = $json('jsonAscii');
+    const jsonModeEl = $json('jsonMode');
+
+    // Attempts to safely parse either raw JSON OR a quoted JSON string.
+    function safeParseJSON(raw) {
+      // Trim BOM and whitespace
+      let s = (raw || '').trim().replace(/^\uFEFF/, '');
+      // If it looks like a quoted JSON payload (e.g. "\"{\\\"a\\\":1}\""), unquote once
+      const quoted = (s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"));
+      if (quoted) {
+        try {
+          s = JSON.parse(s); // unescape once
+        } catch (e) {
+          // Fall through; we'll attempt normal parse below
+        }
+      }
+      // Now parse as JSON
+      return JSON.parse(s);
+    }
+
+    function formatJSON() {
+      const raw = jsonInputEl.value;
+      const indent = Number(jsonIndentEl.value || 2);
+      const ensureAscii = jsonAsciiEl.value === 'true';
+      const mode = jsonModeEl.value;
+
+      try {
+        const obj = safeParseJSON(raw);
+        let space = mode === 'pretty' ? (isFinite(indent) ? indent : 2) : 0;
+
+        let json = JSON.stringify(obj, (key, value) => value, space);
+
+        if (ensureAscii) {
+          // Escape non-ASCII characters
+          json = json.replace(/[^\x00-\x7F]/g, ch => {
+            const code = ch.codePointAt(0);
+            if (code <= 0xFFFF) return '\\u' + code.toString(16).padStart(4, '0');
+            // surrogate pair for code points > 0xFFFF
+            const high = Math.floor((code - 0x10000) / 0x400) + 0xD800;
+            const low  = ((code - 0x10000) % 0x400) + 0xDC00;
+            return '\\u' + high.toString(16).padStart(4, '0') + '\\u' + low.toString(16).padStart(4, '0');
+          });
+        }
+
+        jsonOutputEl.textContent = json;
+        jsonStatusEl.innerHTML = '<span style="color: #4ade80;">✔ JSON is valid.</span>';
+      } catch (err) {
+        jsonOutputEl.textContent = '';
+        // Try to show a friendlier error with position if available
+        const msg = (err && err.message) ? err.message : String(err);
+        jsonStatusEl.innerHTML =
+          '<span style="color: #ff6b6b; white-space: pre-wrap;">✖ Invalid JSON.\n' +
+          msg +
+          '\n\nHints:\n' +
+          '• Use double quotes for keys/strings.\n' +
+          '• Remove trailing commas.\n' +
+          '• Replace single quotes with double quotes.\n' +
+          '• Remove comments (// or /* */) — not allowed in JSON.\n' +
+          '</span>';
+      }
+    }
+
+    function copyJSONOutput() {
+      const text = jsonOutputEl.textContent;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        jsonStatusEl.innerHTML = '<span style="color: #4ade80;">📋 Copied to clipboard.</span>';
+      }).catch(() => {
+        jsonStatusEl.innerHTML = '<span style="color: #ff6b6b;">Copy failed. Select output and press Ctrl/Cmd+C.</span>';
+      });
+    }
+
+    function downloadJSONOutput() {
+      const text = jsonOutputEl.textContent;
+      if (!text) {
+        jsonStatusEl.innerHTML = '<span style="color: #ff6b6b;">Nothing to download — format first.</span>';
+        return;
+      }
+      const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'formatted.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      jsonStatusEl.innerHTML = '<span style="color: #4ade80;">✓ Downloaded formatted.json</span>';
+    }
+
+    function clearJSONAll() {
+      jsonInputEl.value = '';
+      jsonOutputEl.textContent = '';
+      jsonStatusEl.textContent = '';
+      jsonInputEl.focus();
+    }
+
+    $json('jsonFormatBtn').addEventListener('click', formatJSON);
+    $json('jsonCopyBtn').addEventListener('click', copyJSONOutput);
+    $json('jsonDownloadBtn').addEventListener('click', downloadJSONOutput);
+    $json('jsonClearBtn').addEventListener('click', clearJSONAll);
+
+    // Quality-of-life: Ctrl/Cmd+Enter formats; auto-format on paste for small payloads
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.activeElement === jsonInputEl) formatJSON();
+    });
+    jsonInputEl.addEventListener('paste', () => {
+      setTimeout(() => {
+        if (jsonInputEl.value.length < 100000) formatJSON();
+      }, 0);
+    });
+  </script>
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/navbar.js"></script>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
+

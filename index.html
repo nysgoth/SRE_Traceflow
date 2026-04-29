@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SRE TraceFlow - Kubernetes Log Analysis</title>
+  
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/home.css">
+</head>
+<body class="home-page">
+  <div id="navbar-container"></div>
+
+  <div class="main-content">
+    <div class="container" style="background: transparent; backdrop-filter: none; border: none; box-shadow: none;">
+      <div class="logo"></div>
+      <h1><img src="assets/icons/sre_traceflow.png" alt="" style="width:80px;height:80px;margin-right:8px;vertical-align:middle;">SRE TraceFlow</h1>
+      <p class="subtitle">Designed for Kubernetes microservice architecture and KQL queries for Azure Log Analytics</p>
+      
+      <div class="tools-grid">
+      <a href="trace-extractor.html" class="tool-card">
+        <img src="assets/icons/link_white.svg" alt="" class="tool-icon" />
+        <div class="tool-title">Trace Extractor</div>
+        <div class="tool-description">
+          Extract trace IDs from identifiers, format traces, and generate KQL queries for Azure Log Analytics
+        </div>
+      </a>
+      
+      <a href="log-analyzer.html" class="tool-card">
+        <img src="assets/icons/chart-line_white.svg" alt="" class="tool-icon" />
+        <div class="tool-title">Log Analyzer</div>
+        <div class="tool-description">
+          Advanced log analysis with keyword filtering, syntax highlighting, and export capabilities
+        </div>
+      </a>
+      
+      <a href="advanced-kql-query.html" class="tool-card">
+        <img src="assets/icons/map_white.svg" alt="" class="tool-icon" />
+        <div class="tool-title">Advanced KQL Query</div>
+        <div class="tool-description">
+          Advanced KQL query builder with time range filtering and container-specific log analysis
+        </div>
+      </a>
+      
+      <a href="simple-kql-query.html" class="tool-card">
+        <img src="assets/icons/search_white.svg" alt="" class="tool-icon" />
+        <div class="tool-title">Simple KQL Query</div>
+        <div class="tool-description">
+          Quick KQL query generation from formatted trace IDs with time range filtering
+        </div>
+      </a>
+      
+      <a href="interceptor.html" class="tool-card">
+        <img src="assets/icons/chart-line_white.svg" alt="" class="tool-icon" />
+        <div class="tool-title">Logging Interceptor</div>
+        <div class="tool-description">
+          Parse and analyze logging interceptor logs with filtering and trace ID tracking
+        </div>
+      </a>
+      
+      <a href="#" class="tool-card">
+        <img src="assets/icons/settings_white.svg" alt="" class="tool-icon" />
+        <div class="tool-title">Configurator</div>
+        <div class="tool-description">
+          Configure environment-specific data and settings for your deployments
+        </div>
+      </a>
+    </div>
+
+    <div class="getting-started">
+      <h3>Key Features</h3>
+      <div class="getting-started-content">
+        <div class="getting-started-step">
+          <div class="step-number-small">1</div>
+          <div class="step-content">
+            <strong>Kubernetes Optimized</strong>
+            <p>Designed specifically for Kubernetes microservice architecture log analysis and troubleshooting</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">2</div>
+          <div class="step-content">
+            <strong>Trace Formatting</strong>
+            <p>Convert trace identifiers into clean comma-separated strings compatible with Azure Log Analytics has_any() queries</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">3</div>
+          <div class="step-content">
+            <strong>KQL Query Generation</strong>
+            <p>Generate ready-to-use KQL queries for Azure Monitor with time range filtering and container-specific analysis</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">4</div>
+          <div class="step-content">
+            <strong>Log Analysis & Filtering</strong>
+            <p>Advanced keyword filtering with dynamic messages for error, warn, debug, and invalid log detection</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">5</div>
+          <div class="step-content">
+            <strong>Export & Download</strong>
+            <p>Export filtered log results and generated queries for further analysis or documentation</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">6</div>
+          <div class="step-content">
+            <strong>Modern Responsive UI</strong>
+            <p>Glassmorphism design with smooth animations and fully responsive layout for all devices</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">7</div>
+          <div class="step-content">
+            <strong>Time Range Management</strong>
+            <p>Flexible time range selection with presets and custom date ranges for precise log analysis windows</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">8</div>
+          <div class="step-content">
+            <strong>Syntax Highlighting</strong>
+            <p>Visual trace ID detection and syntax highlighting in log results for easier identification</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">9</div>
+          <div class="step-content">
+            <strong>Keyword Filtering</strong>
+            <p>Real-time keyword-based log filtering to quickly find relevant entries in large log datasets</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">10</div>
+          <div class="step-content">
+            <strong>Trace ID Detection</strong>
+            <p>Automatically identify and extract unique trace identifiers from log entries across distributed systems</p>
+          </div>
+        </div>
+        <div class="getting-started-step">
+          <div class="step-number-small">11</div>
+          <div class="step-content">
+            <strong>Client ID Auto-formatting</strong>
+            <p>Automatically format and pad client IDs to meet database requirements (17 digits) with leading zeros</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/navbar.js"></script>
+  <script src="assets/js/common.js"></script>
+  <script>
+    // Modern interactive effects
+    (function() {
+      // Add parallax effect to cards on mouse move
+      const cards = document.querySelectorAll('.tool-card');
+      const container = document.querySelector('.container');
+      
+      if (container) {
+        container.addEventListener('mousemove', (e) => {
+          const rect = container.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          cards.forEach((card) => {
+            if (card.matches(':hover')) {
+              const cardRect = card.getBoundingClientRect();
+              const cardX = cardRect.left + cardRect.width / 2 - rect.left;
+              const cardY = cardRect.top + cardRect.height / 2 - rect.top;
+              
+              const deltaX = (x - cardX) / rect.width;
+              const deltaY = (y - cardY) / rect.height;
+              
+              const rotateX = deltaY * 3;
+              const rotateY = deltaX * -3;
+              
+              card.style.setProperty('--rotate-x', `${rotateX}deg`);
+              card.style.setProperty('--rotate-y', `${rotateY}deg`);
+            }
+          });
+        });
+        
+        container.addEventListener('mouseleave', () => {
+          cards.forEach(card => {
+            card.style.removeProperty('--rotate-x');
+            card.style.removeProperty('--rotate-y');
+          });
+        });
+      }
+      
+      // Add ripple effect on card click
+      cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+          const ripple = document.createElement('span');
+          const rect = this.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          const x = e.clientX - rect.left - size / 2;
+          const y = e.clientY - rect.top - size / 2;
+          
+          ripple.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            left: ${x}px;
+            top: ${y}px;
+            pointer-events: none;
+            animation: ripple 0.6s ease-out;
+          `;
+          
+          this.appendChild(ripple);
+          
+          setTimeout(() => ripple.remove(), 600);
+        });
+      });
+      
+      // Add ripple animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes ripple {
+          to {
+            transform: scale(2);
+            opacity: 0;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    })();
+    
+  </script>
+</body>
+</html>

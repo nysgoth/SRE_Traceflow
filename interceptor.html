@@ -1,0 +1,864 @@
+<!-- Authored by Hristo Stoyanov -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logging Interceptor - SRE TraceFlow</title>
+    
+    <link rel="stylesheet" href="assets/css/common.css">
+    <link rel="stylesheet" href="assets/css/tools.css">
+    <style>
+      .desc-content { max-width: 900px; margin:12px auto 0; overflow:hidden; max-height:0; opacity:0; transition:max-height .35s ease, opacity .35s ease; }
+      .desc-content.open { max-height: 200px; opacity:1; }
+      .hero { text-align: center; }
+      body.interceptor .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      body.interceptor .container > .input-section {
+        margin: 0 0 20px 0;
+      }
+      body.interceptor .container > .action-section {
+        margin: 20px 0 40px 0;
+      }
+      body.interceptor .container > h2 {
+        margin-top: 30px;
+        margin-bottom: 20px;
+      }
+      .dropdown {
+        margin: 10px 0;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .dropdown-content {
+        display: none;
+        margin: 10px 0;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        white-space: pre-wrap;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+      }
+      .dropdown-button {
+        width: 100%;
+        padding: 12px 16px;
+        text-align: left;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .dropdown.failed .dropdown-button,
+      .dropdown-button.failed {
+        background: #dc3545 !important;
+        color: white;
+      }
+      .dropdown.warning .dropdown-button,
+      .dropdown-button.warning {
+        background: #ffa726 !important;
+        color: #000;
+      }
+      .dropdown.omitted .dropdown-button,
+      .dropdown-button.omitted {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #fff;
+      }
+      .dropdown.corrupted .dropdown-button,
+      .dropdown-button.corrupted {
+        background: #f574cc !important;
+        color: #000;
+      }
+      .dropdown.success .dropdown-button,
+      .dropdown-button.success {
+        background: rgba(74, 222, 128, 0.25) !important;
+        border: 1px solid rgba(74, 222, 128, 0.4) !important;
+        color: #ffffff;
+      }
+      .dropdown.default .dropdown-button,
+      .dropdown-button.default {
+        background: #a9a9a9 !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #000;
+      }
+      .dropdown-button:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+      .action-buttons button {
+        padding: 10px 18px;
+        background: rgba(102, 126, 234, 0.3);
+        border: 1px solid rgba(102, 126, 234, 0.5);
+        color: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .action-buttons button:hover {
+        background: rgba(102, 126, 234, 0.5);
+        border-color: rgba(102, 126, 234, 0.7);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+      #clearFilter {
+        background: #dc3545 !important;
+        border-color: #dc3545 !important;
+      }
+      #clearFilter:hover {
+        background: #c82333 !important;
+        border-color: #c82333 !important;
+      }
+      #output {
+        white-space: pre-wrap;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+        margin-top: 40px;
+      }
+      .filter-options {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0 15px 0;
+        padding: 0;
+      }
+      .filter-toggle-btn {
+        padding: 10px 18px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+      }
+      .filter-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+      }
+      .filter-toggle-btn.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-color: rgba(102, 126, 234, 0.5);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+      .filter-toggle-btn.active:hover {
+        background: linear-gradient(135deg, #5a6fd8, #6a3d8f);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        transform: translateY(-2px);
+      }
+      .dropdown-content h3 {
+        color: #fff;
+        margin: 15px 0 10px 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .dropdown-content hr {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 15px 0;
+      }
+      .dropdown-content pre {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      /* Tooltip styles for stat items */
+      .stat-item {
+        position: relative;
+        cursor: help;
+      }
+      .stat-item .tooltip {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-8px);
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(10px);
+        color: #ffffff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1000;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+        margin-bottom: 8px;
+        max-width: 250px;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.4;
+      }
+      .stat-item .tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.95);
+      }
+      .stat-item:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+      }
+      .output-header {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: 50px;
+        margin-top: 130px;
+        margin-bottom: 70px;
+        padding-top: 40px;
+        padding-bottom: 40px;
+        border-top: 1px solid rgba(102, 126, 234, 0.3);
+        border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+      }
+      .output-header h2 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .output-header .results-stats {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        z-index: 10;
+      }
+      .output-header.hidden {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .output-header {
+          flex-direction: column;
+          align-items: flex-start;
+          min-height: auto;
+        }
+        .output-header .results-stats {
+          position: relative;
+          top: auto;
+          right: auto;
+          transform: none;
+          width: 100%;
+          justify-content: flex-start;
+          margin-top: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body class="interceptor">
+    <div id="navbar-container"></div>
+
+    <div class="main-content">
+      <div class="hero">
+        <div class="hero-header">
+          <h1><img src="assets/icons/chart-line_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Logging Interceptor</h1>
+          <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div id="pageDesc" class="desc-content open" aria-hidden="false">
+          <p>Parse and analyze logging interceptor logs with filtering, trace ID tracking, and detailed request/response inspection.</p>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="input-section">
+          <div class="input-wrapper">
+            <label for="inputLogs">Input Logs</label>
+            <textarea id="inputLogs" placeholder="Paste your logs here" rows="6"></textarea>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <div class="input-wrapper">
+            <label for="searchFilter">Search Filter</label>
+            <input
+              type="text"
+              id="searchFilter"
+              placeholder="Enter a search filter string (e.g. endpoint URL)"
+            />
+          </div>
+        </div>
+
+        <div class="filter-options">
+          <button class="filter-toggle-btn" id="hideOmittedBtn" data-filter="hideOmitted">
+            Hide omitted
+          </button>
+          <button class="filter-toggle-btn" id="showErrorsOnlyBtn" data-filter="showErrorsOnly">
+            Show errors only
+          </button>
+          <button class="filter-toggle-btn" id="enableTraceIdBtn" data-filter="enableTraceId">
+            Show all requests with same trace ID
+          </button>
+        </div>
+
+        <div class="action-section">
+          <div class="button-group">
+            <button class="analyze-btn" onclick="processLogs()">
+              <img src="assets/icons/play_white.svg" alt="" width="16" height="16"> Process
+            </button>
+            <button class="analyze-btn" id="clearFilter" onclick="clearFilter()" style="display: none;">
+              Clear Filter
+            </button>
+          </div>
+        </div>
+
+        <div class="output-header hidden" id="outputHeader" style="margin-top: 30px; margin-bottom: 20px; position: relative;">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+            <img src="assets/icons/chart-line_white.svg" alt="" style="width:28px;height:28px;">Results
+          </h2>
+          <div class="results-stats" id="interceptorStats"></div>
+        </div>
+        <div id="output"></div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="assets/js/navbar.js"></script>
+    <script src="assets/js/common.js"></script>
+    <script>
+      function toggleDesc(){
+        const el = document.getElementById('pageDesc');
+        const isOpen = el.classList.contains('open');
+        if (isOpen) {
+          el.classList.remove('open');
+          el.setAttribute('aria-hidden', 'true');
+        } else {
+          el.classList.add('open');
+          el.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          processLogs();
+        }
+      });
+      const OMITTED = 'omitted'
+      const NOT_FOUND = 'CONTENT_NOT_FOUND'
+      const BLANK = '__'
+      const timestampRegex = /\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\.\d{3}(?:[+-]\d{2}:\d{2})?/;
+
+      function parseLogLine(logLine) {
+        //"requestUrl=[{}] responseStatus=[{}] responseTime=[{}] requestHeaders=[{}] responseHeaders=[{}] requestPayload=[{}] responsePayload=[{}]";
+        const timestamp = logLine.match(timestampRegex)[0]
+        const logLevel = extractParameter(logLine, timestamp, " [core-integration");
+        const traceIdSpanId = extractSpandIdTraceId(logLine);
+        const requestUrl = extractParameter(logLine, 'requestUrl=[', '] responseStatus=[');
+        const responseStatus = extractParameter(logLine, 'responseStatus=[', '] responseTime=[');
+        const responseTime = extractParameter(logLine, 'responseTime=[', '] requestHeaders=[');
+        const requestHeaders = extractParameter(logLine, 'requestHeaders=[', '] responseHeaders=[');
+        const responseHeaders = extractParameter(logLine, 'responseHeaders=[', '] requestPayload=[');
+        const requestPayload = extractParameter(logLine, 'requestPayload=[', '] responsePayload=[');
+        const responsePayload = extractParameter(logLine, 'responsePayload=[', ']');
+        const isOmitted = requestPayload === OMITTED
+
+        const isCorruptedLine = requestUrl === NOT_FOUND || requestHeaders === NOT_FOUND || requestPayload === NOT_FOUND 
+        || responseStatus === NOT_FOUND || responseTime === NOT_FOUND || responseHeaders === NOT_FOUND
+        || responsePayload === NOT_FOUND;
+
+        return {
+          timestamp,
+          logLevel,
+          requestUrl,
+          traceId: traceIdSpanId.traceId,
+          spanId: traceIdSpanId.spanId,
+          requestHeaders: parseHeaders(requestHeaders),
+          requestPayload: parseJson(requestPayload),
+          responseStatus,
+          responseTime,
+          responseHeaders: parseHeaders(responseHeaders),
+          responsePayload: parseJson(responsePayload),
+          isOmitted,
+          logLine,
+          isCorruptedLine
+        };
+      }
+
+      function extractSpandIdTraceId(line) {
+        const startIndex = line.indexOf('[core-integration-service,')
+        const endIndex = line.indexOf(']', startIndex);
+
+        const result = line.substring(startIndex, endIndex).split(',')
+        
+        return {
+          traceId: result[1],
+          spanId: result[2]
+        }
+      }
+
+      function extractParameter(logLine, startMarker, endMarker) {
+        const startIndex = logLine.indexOf(startMarker) + startMarker.length;
+        const isStartMarkerFound = startIndex >= startMarker.length
+        const endIndex = logLine.lastIndexOf(endMarker);
+        if(isStartMarkerFound && endIndex === -1) {
+          //unable to find the end. Probably corrupted line.
+          return logLine.substring(startMarker);
+        } else if (!isStartMarkerFound) {
+          return NOT_FOUND;
+        }
+        return logLine.substring(startIndex, endIndex).trim();
+      }
+
+      function parseHeaders(headersString) {
+        if(!headersString || headersString === NOT_FOUND) {
+          return headersString
+        }
+        const headersArray = headersString.split(", ");
+        const headers = {};
+        headersArray.forEach((header) => {
+          const [key, value] = header.split(":");
+          if(value) {
+            headers[key.trim()] = value.replace(/['"]+/g, "").trim();
+          } else {
+            console.warn(`Header value not present`, key, value, headersString)
+          }
+        });
+        return headers;
+      }
+
+      function parseJson(jsonString) {
+        if(jsonString === OMITTED || jsonString === NOT_FOUND) {
+          return jsonString
+        }
+        try {
+          // Try to parse the string to JSON
+          return JSON.parse(jsonString);
+        } catch (e) {
+          // If you get an exception, most likely there are double quotes (CSV log file from Azure)
+          try {
+            jsonString = jsonString.replaceAll('""', '"')
+            return JSON.parse(jsonString)
+          } catch(nestedEx) {
+            console.warn("Error parsing JSON: ", jsonString, nestedEx);
+            return jsonString;
+          }
+        }
+      }
+
+      // Filter toggle button handlers
+      let filterStates = {
+        hideOmitted: false,
+        showErrorsOnly: false,
+        enableTraceId: false
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.filter-toggle-btn');
+        filterButtons.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const filterName = this.getAttribute('data-filter');
+            filterStates[filterName] = !filterStates[filterName];
+            this.classList.toggle('active', filterStates[filterName]);
+          });
+        });
+      });
+
+      function processLogs() {
+        const inputLogs = document.getElementById("inputLogs").value;
+        const searchFilter = document
+          .getElementById("searchFilter")
+          .value.toLowerCase();
+        const hideOmitted = filterStates.hideOmitted;
+        const enableTraceId = filterStates.enableTraceId;
+        const showErrorsOnly = filterStates.showErrorsOnly;
+
+        const logLines = inputLogs.split("\n");
+        let parsingErrorCounter = 0;
+        const results = logLines
+          .filter((line) => line.includes("i.DskLoggingInterceptor"))
+          .map((line) => {
+            try {
+              return parseLogLine(line)
+            } catch(e) {
+              parsingErrorCounter++;
+              return null;
+            }
+          });
+
+        if(parsingErrorCounter > 0) {
+          alert(`An error has occurred while parsing ${parsingErrorCounter} of the loglines. They may be incomplete or corrupted.`);
+        }
+        let finalResults;
+        if(searchFilter && searchFilter.length > 0) {
+          // Filter results based on search filter
+          const filteredResults = results.filter((result) =>
+            result && result.logLine.toLowerCase().includes(searchFilter)
+          );
+
+          // Get all span IDs that match the search filter
+          if(enableTraceId) {
+            const matchingSpanIds = new Set(
+              filteredResults.map((result) => result.spanId)
+            );
+
+            // Filter results to include all lines with matching span IDs
+            finalResults = results.filter((result) =>
+              matchingSpanIds.has(result.spanId)
+            );
+          } else {
+            finalResults = filteredResults;
+          }
+        } else {
+          finalResults = results;
+        }
+
+        if(showErrorsOnly) {
+          finalResults = finalResults.filter(res => res.responseStatus != '200')
+        }
+
+        finalResults.sort((a, b) => {
+          // Convert timestamps to Date objects
+          const dateA = new Date(a.timestamp);
+          const dateB = new Date(b.timestamp);
+
+          // Compare timestamps using getTime() for accurate sorting
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        // Show or hide the "Clear Filter" button based on the presence of filters
+        const clearFilterButton = document.getElementById("clearFilter");
+        if (searchFilter.trim() !== "") {
+          clearFilterButton.style.display = "inline-flex";
+        } else {
+          clearFilterButton.style.display = "none";
+        }
+
+        // Show output header
+        const outputHeader = document.getElementById("outputHeader");
+        if (outputHeader) {
+          outputHeader.classList.remove("hidden");
+        }
+
+        // Count request types
+        let totalCount = finalResults.length;
+        let successCount = 0;
+        let failedCount = 0;
+        let omittedCount = 0;
+        let warningCount = 0;
+        let corruptedCount = 0;
+
+        finalResults.forEach((result) => {
+          if (result.isCorruptedLine) {
+            corruptedCount++;
+          } else {
+            const isOmitted = result.requestPayload === OMITTED && result.responsePayload === OMITTED;
+            const isFailedResponse = result.responseStatus !== "200" || 
+              (result.responsePayload.Http_Response_Code && result.responsePayload.Http_Response_Code != 200);
+            let shouldBeWarning = false;
+
+            if (!isOmitted) {
+              try {
+                shouldBeWarning = result.responsePayload && 
+                  result.responsePayload.Additional_Info && 
+                  result.responsePayload.Additional_Info.length != 0;
+              } catch (e) {
+                shouldBeWarning = true;
+              }
+            }
+
+            if (isOmitted) {
+              omittedCount++;
+            } else if (isFailedResponse) {
+              failedCount++;
+            } else if (shouldBeWarning) {
+              warningCount++;
+            } else {
+              successCount++;
+            }
+          }
+        });
+
+        // Update stats
+        updateInterceptorStats(totalCount, successCount, failedCount, omittedCount, warningCount, corruptedCount);
+
+        const outputDiv = document.getElementById("output");
+        outputDiv.innerHTML = "";
+
+        finalResults.forEach((result) => {
+          if (hideOmitted && result.isOmitted) {
+            return; // Skip omitted results if the checkbox is checked
+          }
+          const dropdown = document.createElement("div");
+
+          dropdown.className = "dropdown ".concat(
+            getDropdownBackgroundClasses(result)
+          );
+
+          const button = document.createElement("button");
+          const label = `(${result.timestamp}) ${result.responseStatus === NOT_FOUND ? BLANK : result.responseStatus} (${result.responseTime === NOT_FOUND ? BLANK : result.responseTime}) ${result.requestUrl}`;
+
+          button.className = "dropdown-button".concat(
+            getDropdownBackgroundClasses(result)
+          );
+
+          button.textContent = label;
+          const content = document.createElement("div");
+          content.className = "dropdown-content";
+          content.style.display = "none"; // Explicitly set initial state
+
+          button.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = content.style.display === "block";
+            content.style.display = isVisible ? "none" : "block";
+          };
+
+          // Add a div to hold the action buttons
+          const actionButtons = document.createElement("div");
+          actionButtons.className = "action-buttons";
+
+          // Add a copy Payload button
+          const copyRequestPayloadButton = document.createElement("button");
+          copyRequestPayloadButton.textContent = "Copy Request Payload";
+          copyRequestPayloadButton.onclick = () => {
+            navigator.clipboard.writeText(
+              JSON.stringify(result.requestPayload, null, 2)
+            );
+          };
+
+          const copyResponsePayloadButton = document.createElement("button");
+          copyResponsePayloadButton.textContent = "Copy Response Payload";
+          copyResponsePayloadButton.onclick = () => {
+            navigator.clipboard.writeText(
+              JSON.stringify(result.responsePayload, null, 2)
+            );
+          };
+
+          // Add a copy span ID button
+          const copySpanIdButton = document.createElement("button");
+          copySpanIdButton.textContent = "Copy Span ID";
+          copySpanIdButton.onclick = () => {
+            navigator.clipboard.writeText(result.spanId);
+          };
+
+          // Add a copy trace ID button
+          const copyTraceIdButton = document.createElement("button");
+          copyTraceIdButton.textContent = "Copy trace ID";
+          copyTraceIdButton.onclick = () => {
+            navigator.clipboard.writeText(result.traceId);
+          };
+
+          // Add a filter button
+          const filterBySpanIdButton = document.createElement("button");
+          filterBySpanIdButton.textContent = "Filter by Span ID";
+          filterBySpanIdButton.onclick = () => {
+            document.getElementById("searchFilter").value = result.spanId;
+            processLogs(); // Re-process the logs to apply the filter
+          };
+
+          // Add a copy ssb traceid button
+          const ssbTraceIdButton = document.createElement("button");
+          ssbTraceIdButton.textContent = "Copy ssb-traceid";
+          ssbTraceIdButton.onclick = () => {
+            const ssbTraceId = result.responseHeaders['ssb-traceid'].replaceAll(']','');
+            if(ssbTraceId) {
+              navigator.clipboard.writeText(ssbTraceId);
+            } else {
+              alert('Could not find ssb-traceid in the response headers.');
+            }
+          };
+
+          // Add a copy report button
+          const reportButton = document.createElement("button");
+          reportButton.textContent = "Copy Report";
+          reportButton.onclick = () => {
+            generateReport(result);
+          };
+
+          actionButtons.appendChild(copyRequestPayloadButton);
+          actionButtons.appendChild(copyResponsePayloadButton);
+          actionButtons.appendChild(copySpanIdButton);
+          actionButtons.appendChild(copyTraceIdButton);
+          actionButtons.appendChild(filterBySpanIdButton);
+          actionButtons.appendChild(ssbTraceIdButton);
+          actionButtons.appendChild(reportButton);
+
+          let requestContent = `${formatHeaders(
+            result.requestHeaders
+          )}\n\n`.concat(
+            `${JSON.stringify(result.requestPayload, null, 2)}\n\n`
+          );
+
+          let responseContent = `${formatHeaders(
+            result.responseHeaders
+          )}\n\n`.concat(
+            `${JSON.stringify(result.responsePayload, null, 2)}\n\n`
+          );
+
+          let footerContent = `Full Logline:\n${result.logLine}`;
+
+          const requestPre = document.createElement("pre");
+          const responsePre = document.createElement("pre");
+          const footerPre = document.createElement("pre");
+          const requestTitle = document.createElement("h3");
+          requestTitle.innerHTML = "Request:";
+          const responseTitle = document.createElement("h3");
+          responseTitle.innerHTML = "Response:";
+          requestPre.textContent = requestContent;
+          responsePre.textContent = responseContent;
+          footerPre.textContent = footerContent;
+
+          content.appendChild(actionButtons);
+
+          content.appendChild(requestTitle);
+          content.appendChild(requestPre);
+          content.appendChild(document.createElement("hr"));
+          content.appendChild(responseTitle);
+          content.appendChild(responsePre);
+          content.appendChild(document.createElement("hr"));
+          content.appendChild(footerPre);
+
+          dropdown.appendChild(button);
+          dropdown.appendChild(content);
+          outputDiv.appendChild(dropdown);
+        });
+      }
+
+      function clearFilter() {
+        document.getElementById("searchFilter").value = "";
+        processLogs();
+      }
+
+      function updateInterceptorStats(total, success, failed, omitted, warning, corrupted) {
+        const statsDiv = document.getElementById("interceptorStats");
+        if (!statsDiv) return;
+        
+        statsDiv.innerHTML = `
+          <div class="stat-item">
+            <div class="stat-number">${total}</div>
+            <div class="stat-label">Total</div>
+            <div class="tooltip">Total number of requests found in the logs</div>
+          </div>
+          <div class="stat-item success" style="border-color: rgba(74, 222, 128, 0.4); background: rgba(74, 222, 128, 0.25);">
+            <div class="stat-number">${success}</div>
+            <div class="stat-label">Success</div>
+            <div class="tooltip">Successful requests (200 status, no warnings)</div>
+          </div>
+          <div class="stat-item error">
+            <div class="stat-number">${failed}</div>
+            <div class="stat-label">Failed</div>
+            <div class="tooltip">Failed requests (non-200 status code)</div>
+          </div>
+          <div class="stat-item warn">
+            <div class="stat-number">${warning}</div>
+            <div class="stat-label">Warning</div>
+            <div class="tooltip">Requests with Additional_Info field present</div>
+          </div>
+          <div class="stat-item" style="border-color: #a9a9a9; background: rgba(169, 169, 169, 0.1);">
+            <div class="stat-number">${omitted}</div>
+            <div class="stat-label">Omitted</div>
+            <div class="tooltip">Requests with omitted payloads (payloads not included in logs)</div>
+          </div>
+          <div class="stat-item" style="border-color: #f574cc; background: rgba(245, 116, 204, 0.1);">
+            <div class="stat-number">${corrupted}</div>
+            <div class="stat-label">Corrupted</div>
+            <div class="tooltip">Corrupted requests (missing required fields or parsing errors)</div>
+          </div>
+        `;
+      }
+
+      function getDropdownBackgroundClasses(result) {
+        if(result.isCorruptedLine) {
+          return " corrupted"
+        }
+        const isOmitted =
+          result.requestPayload === OMITTED &&
+          result.responsePayload === OMITTED;
+        const isFailedResponse =
+          result.responseStatus !== "200" ||
+          (result.responsePayload.Http_Response_Code && 
+           result.responsePayload.Http_Response_Code != 200);
+        let shouldBeWarning = false;
+
+        if (!isOmitted) {
+          try {
+            shouldBeWarning =
+              result.responsePayload &&
+              result.responsePayload.Additional_Info &&
+              result.responsePayload.Additional_Info.length != 0;
+          } catch (e) {
+            // Parsing error - unexpectedly
+            return " warning";
+          }
+        }
+
+        const classes = `${isOmitted ? " omitted" : ""}${
+          isFailedResponse ? " failed" : ""
+        }${shouldBeWarning ? " warning" : ""}`;
+        // If no special class, add success class (successful requests)
+        return classes.trim() === "" ? " success" : classes;
+      }
+
+      function generateReport(result) {
+        let requestContent = `${result.timestamp}\n`
+          .concat(`${result.requestUrl}\n`)
+          .concat(`${formatHeaders(result.requestHeaders)}\n\n`)
+          .concat(`${JSON.stringify(result.requestPayload, null, 2)}\n\n`);
+
+        let responseContent =
+          `${result.responseStatus} (${result.responseTime})\n`
+            .concat(`${formatHeaders(result.responseHeaders)}\n\n`)
+            .concat(`${JSON.stringify(result.responsePayload, null, 2)}\n\n`);
+
+        const reportText = `Request:\n${requestContent}\n\nResponse:\n${responseContent}`;
+
+        console.log(reportText);
+        navigator.clipboard.writeText(reportText);
+      }
+
+      function formatHeaders(headers) {
+        if(!headers || headers === NOT_FOUND) {
+          return NOT_FOUND;
+        }
+        let result = "";
+        for (const [key, value] of Object.entries(headers)) {
+          result += `${key}: ${value}\n`;
+        }
+        return result.trim();
+      }
+    </script>
+  </body>
+</html>

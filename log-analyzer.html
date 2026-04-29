@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log Analyzer - SRE TraceFlow</title>
+
+<link rel="stylesheet" href="assets/css/common.css">
+<link rel="stylesheet" href="assets/css/tools.css">
+<style>
+  .desc-content {
+    max-width: 800px; margin: 12px auto 0 auto; overflow: hidden;
+    max-height: 0; opacity: 0; transition: max-height 0.35s ease, opacity 0.35s ease;
+  }
+  .desc-content.open { max-height: 200px; opacity: 1; }
+  .hero { text-align: center; }
+</style>
+</head>
+<body class="log-analyzer">
+
+
+
+
+
+
+
+
+
+
+
+  <div id="navbar-container"></div>
+
+  <div class="main-content">
+    <div class="hero">
+      <div class="hero-header">
+        <h1><img src="assets/icons/chart-line_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Log Analyzer</h1>
+        <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="pageDesc" class="desc-content open" aria-hidden="false">
+      <p> - Advanced log analysis tool designed for Kubernetes microservice architecture with Azure Log Analytics integration</p>
+      </div>
+    </div>
+
+    <!-- Step 1: Input Logs -->
+    <div class="container step-container" id="step1">
+      <div class="step-header">
+        <div class="step-number">
+          <img src="assets/icons/chart-line_white.svg" alt="" width="24" height="24">
+        </div>
+        <div class="step-header-content">
+          <div class="step-title">Input Your Logs</div>
+          <div class="step-description">Paste or upload your log content below to begin analysis</div>
+        </div>
+      </div>
+      
+      <div class="input-section">
+        <div class="input-wrapper">
+          <label for="logInput">Log Content</label>
+          <textarea id="logInput" placeholder="Paste or upload your log content here...&#10;&#10;Example:&#10;2024-01-15T10:30:45.123Z [ERROR] Application failed to start&#10;2024-01-15T10:30:46.456Z [WARN] Database connection timeout&#10;2024-01-15T10:30:47.789Z [INFO] Retrying connection..." rows="6"></textarea>
+        </div>
+      </div>
+      
+      <div class="action-section">
+        <div class="button-group">
+          <input type="file" id="fileInput" accept=".txt,.log,.csv" style="display: none;" onchange="handleFileUpload(event)">
+          <button id="uploadBtn" onclick="document.getElementById('fileInput').click()" class="upload-btn">
+            <img src="assets/icons/download_white.svg" alt="" width="16" height="16" style="transform: rotate(180deg);"> Upload File
+          </button>
+          <button id="analyzeBtn" onclick="analyzeLog()" class="analyze-btn">
+            <img src="assets/icons/search_white.svg" alt="" width="16" height="16"> Analyze Logs
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Results & Filters -->
+    <div class="container step-container hidden" id="step2" style="max-width: 90vw !important; width: 90vw !important; margin-left: auto !important; margin-right: auto !important;">
+      <div class="step-header">
+        <div class="step-number">
+          <img src="assets/icons/search_white.svg" alt="" width="24" height="24">
+        </div>
+        <div class="step-header-content">
+          <div class="step-title">Analysis Results</div>
+          <div class="step-description">Review and filter your log analysis results</div>
+        </div>
+        <div class="results-stats" id="resultsStats"></div>
+      </div>
+      
+      <div class="results-section">
+        <div class="results" id="results">
+          <div class="controls-bar">
+            <div class="controls-hint">Use the filter below for better analysis</div>
+            <div class="filter-actions">
+              <button onclick="reanalyzeLogs()" class="reanalyze-btn">
+                <img src="assets/icons/sync_white.svg" alt="" width="14" height="14"> Re-analyze
+              </button>
+              <button onclick="backToInput()" class="back-btn">
+                <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14"> Back to Input
+              </button>
+            </div>
+          </div>
+          
+          <div class="filter-bar">
+            <div class="filter-label">Filter by:</div>
+            <div class="selected-keywords" id="keywordButtons"></div>
+          </div>
+          
+          <div class="custom-keyword-input">
+            <input id="customKeyword" placeholder="Enter custom keyword" type="text"/>
+            <button onclick="addCustomKeyword()" class="add-btn"><img src="assets/icons/plus_white.svg" alt="" width="14" height="14"> Add</button>
+            <button onclick="toggleFullscreen()" class="fullscreen-btn" id="fullscreenBtn" title="Toggle Fullscreen">
+              ⛶ Fullscreen
+            </button>
+          </div>
+          <div class="results-content" id="resultsContent"></div>
+        </div>
+      </div>
+      
+      
+      <div class="download-section">
+        <h3>Save Results</h3>
+        <div class="download-controls">
+          <input id="filename" placeholder="Filename (e.g. results.txt)" type="text"/>
+          <button onclick="downloadResults()" class="download-btn">
+            <img src="assets/icons/download_white.svg" alt="" width="14" height="14"> Download
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Analyzing logs...</div>
+        <div class="loading-progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+    </div>
+  </div><script>
+    function toggleDesc(){
+      const el = document.getElementById('pageDesc');
+      const isOpen = el.classList.contains('open');
+      if (isOpen) {
+        el.classList.remove('open');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.classList.add('open');
+        el.setAttribute('aria-hidden', 'false');
+      }
+    }
+    const keywords = [
+      { label: "error [", class: "error" },
+      { label: "warn [", class: "warn" },
+      { label: "debug [", class: "debug" },
+      { label: "invalid", class: "invalid" }
+    ];
+    let selectedKeywords = [];
+    let customKeywords = [];
+    let analysisOutput = "";
+    let uploadedFileContent = "";
+    const keywordButtonsDiv = document.getElementById("keywordButtons");
+    keywords.forEach(({ label }) => {
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.onclick = () => toggleKeyword(label, btn);
+      keywordButtonsDiv.appendChild(btn);
+    });
+    function toggleKeyword(keyword, button) {
+      const index = selectedKeywords.indexOf(keyword);
+      if (index === -1) {
+        selectedKeywords.push(keyword);
+        button.classList.add("active-filter");
+      } else {
+        selectedKeywords.splice(index, 1);
+        button.classList.remove("active-filter");
+      }
+    }
+    function addCustomKeyword() {
+      const input = document.getElementById("customKeyword");
+      const value = input.value.trim();
+      if (value && !customKeywords.includes(value)) {
+        customKeywords.push(value);
+        selectedKeywords.push(value);
+        const btn = document.createElement("button");
+        btn.textContent = value;
+        btn.classList.add("active-filter");
+        btn.onclick = () => toggleKeyword(value, btn);
+        keywordButtonsDiv.appendChild(btn);
+        input.value = "";
+      }
+    }
+    
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedFileContent = e.target.result;
+        // Also populate the textarea with the file content for display
+        document.getElementById('logInput').value = uploadedFileContent;
+        showNotification(`File "${file.name}" loaded successfully`, 'success');
+      };
+      reader.onerror = function() {
+        showNotification('Error reading file', 'error');
+      };
+      reader.readAsText(file);
+    }
+    
+    function analyzeLog() {
+      // Use uploaded file content if available, otherwise use textarea content
+      const logText = uploadedFileContent.trim() || document.getElementById('logInput').value.trim();
+      
+      if (!logText) {
+        showNotification('Please paste some log content or upload a file to analyze', 'error');
+        return;
+      }
+      
+      // Show loading overlay
+      showLoadingOverlay();
+      
+      // Simulate analysis delay for cool effect
+      setTimeout(() => {
+        performAnalysis(logText);
+        hideLoadingOverlay();
+        showStep2();
+      }, 1500);
+    }
+    
+    function performAnalysis(logText) {
+      const lines = logText.split('\n');
+      analysisOutput = "Analysis Results:\n";
+      let htmlOutput = "";
+      let matchCount = 0;
+      let errorCount = 0;
+      let warnCount = 0;
+      let debugCount = 0;
+      let requestCount = 0;
+      let responseCount = 0;
+      
+      lines.forEach((line, index) => {
+        const lowerLine = line.toLowerCase();
+        let matchedKeyword = null;
+        keywords.concat(customKeywords.map(k => ({ label: k, class: "" }))).forEach(({ label, class: cssClass }) => {
+          if (lowerLine.includes(label.toLowerCase())) {
+            matchedKeyword = { label, class: cssClass };
+          }
+        });
+        const showLine = selectedKeywords.length === 0 || selectedKeywords.some(k => lowerLine.includes(k.toLowerCase()));
+        if (showLine) {
+          matchCount++;
+          const cssClass = matchedKeyword?.class || "";
+          let highlightedLine = line.trim();
+          highlightedLine = highlightedLine.replace(/\b([a-zA-Z0-9_-]+-(service|api|application|worker|job|engine|container))\b/g, '<span class="microservice">$1</span>');
+          highlightedLine = highlightedLine.replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}\b/g, '<span class="timestamp">$&</span>');
+          
+          // Highlight trace ID patterns
+          highlightedLine = highlightedLine.replace(/dt\.trace_id=([a-f0-9]+)/gi, '<span class="dt-trace-id">dt.trace_id=$1</span>');
+          highlightedLine = highlightedLine.replace(/ssb-traceid:""([^"]+)""/gi, '<span class="ssb-trace-id">ssb-traceid:""$1""</span>');
+          const resultLine = `Line ${index + 1}: ${highlightedLine}`;
+          analysisOutput += "\n" + resultLine + '\n';
+          htmlOutput += `<div class="${cssClass}">${resultLine}</div>`;
+          
+          // Count log types
+          if (cssClass === 'error') errorCount++;
+          else if (cssClass === 'warn') warnCount++;
+          else if (cssClass === 'debug') debugCount++;
+          
+          // Count requests and responses - use strict patterns to avoid false positives
+          const lowerLineForDetection = line.toLowerCase();
+          
+          // Check for interceptor log format (contains both requestUrl and responseStatus)
+          const hasRequestUrl = /requesturl\s*[=\[]/.test(lowerLineForDetection);
+          const hasResponseStatus = /responsestatus\s*[=\[]/.test(lowerLineForDetection);
+          
+          if (hasRequestUrl && hasResponseStatus) {
+            // Interceptor log format - contains both request and response in one line
+            // Count as one request-response pair
+            requestCount++;
+            responseCount++;
+          } else if (hasRequestUrl) {
+            // Only request info present
+            requestCount++;
+          } else if (hasResponseStatus) {
+            // Only response info present
+            responseCount++;
+          } else {
+            // Check for other HTTP log formats
+            // Request: HTTP method followed by URL path
+            const httpRequestPattern = /\b(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+\/[^\s]*/i.test(line);
+            // Response: HTTP version followed by status code
+            const httpResponsePattern = /HTTP\/\d\.\d\s+(200|201|202|204|300|301|302|304|400|401|403|404|405|408|409|500|502|503|504)\b/.test(line);
+            
+            if (httpRequestPattern && !httpResponsePattern) {
+              requestCount++;
+            } else if (httpResponsePattern && !httpRequestPattern) {
+              responseCount++;
+            } else if (httpRequestPattern && httpResponsePattern) {
+              // HTTP log line with both request and response
+              requestCount++;
+              responseCount++;
+            }
+          }
+        }
+      });
+      
+      if (matchCount === 0) {
+        analysisOutput += "No matches found.\n";
+        htmlOutput = `<div style="color: #ffa726; text-align: center; padding: 20px;">No matches found. Try selecting different keywords or add custom ones.</div>`;
+      } else {
+        htmlOutput = `<div style="color: #ffffff; text-align: center; padding: 10px; margin-bottom: 15px; background: rgba(74, 74, 74, 0.1); border-radius: 8px;">Found ${matchCount} matching lines</div>` + htmlOutput;
+      }
+      
+      // Update results
+      document.getElementById('resultsContent').innerHTML = htmlOutput;
+      
+      // Update stats
+      updateResultsStats(matchCount, errorCount, warnCount, debugCount, requestCount, responseCount);
+      
+      // Show success animation
+      const resultsContentDiv = document.getElementById('resultsContent');
+      resultsContentDiv.style.transform = 'scale(1.02)';
+      setTimeout(() => resultsContentDiv.style.transform = 'scale(1)', 200);
+    }
+    
+    function showLoadingOverlay() {
+      const overlay = document.getElementById('loadingOverlay');
+      const loadingText = document.querySelector('.loading-text');
+      overlay.classList.remove('hidden');
+      
+      // Dynamic loading messages
+      const messages = [
+        'Analyzing logs...',
+        'Scanning for patterns...',
+        'Detecting trace IDs...',
+        'Filtering keywords...',
+        'Processing results...',
+        'Almost done...'
+      ];
+      
+      let messageIndex = 0;
+      const messageInterval = setInterval(() => {
+        loadingText.textContent = messages[messageIndex];
+        messageIndex = (messageIndex + 1) % messages.length;
+      }, 300);
+      
+      // Store interval for cleanup
+      overlay.messageInterval = messageInterval;
+      
+      // Enhanced progress bar animation
+      const progressBar = document.getElementById('progressBar');
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 12 + 3; // More varied progress
+        if (progress > 100) progress = 100;
+        progressBar.style.width = progress + '%';
+        if (progress >= 100) {
+          clearInterval(progressInterval);
+        }
+      }, 80);
+      
+      // Store progress interval for cleanup
+      overlay.progressInterval = progressInterval;
+    }
+    
+    function hideLoadingOverlay() {
+      const overlay = document.getElementById('loadingOverlay');
+      
+      // Clean up intervals
+      if (overlay.messageInterval) {
+        clearInterval(overlay.messageInterval);
+      }
+      if (overlay.progressInterval) {
+        clearInterval(overlay.progressInterval);
+      }
+      
+      overlay.classList.add('hidden');
+    }
+    
+    function showStep2() {
+      const step1 = document.getElementById('step1');
+      const step2 = document.getElementById('step2');
+      
+      step1.classList.add('fade-out');
+      setTimeout(() => {
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        step2.classList.add('fade-in');
+      }, 300);
+    }
+    
+    function backToInput() {
+      const step1 = document.getElementById('step1');
+      const step2 = document.getElementById('step2');
+      
+      step2.classList.add('fade-out');
+      setTimeout(() => {
+        step2.classList.add('hidden');
+        step1.classList.remove('hidden');
+        step1.classList.add('fade-in');
+        // Clear uploaded file when going back
+        uploadedFileContent = "";
+        document.getElementById('fileInput').value = "";
+      }, 300);
+    }
+    
+    function reanalyzeLogs() {
+      // Use uploaded file content if available, otherwise use textarea content
+      const logText = uploadedFileContent.trim() || document.getElementById('logInput').value.trim();
+      if (!logText) {
+        showNotification('No log content to re-analyze', 'error');
+        return;
+      }
+      
+      showLoadingOverlay();
+      setTimeout(() => {
+        performAnalysis(logText);
+        hideLoadingOverlay();
+        showNotification('Logs re-analyzed successfully!', 'success');
+      }, 1000);
+    }
+    
+    function updateResultsStats(total, errors, warnings, debugs, requests, responses) {
+      const statsDiv = document.getElementById('resultsStats');
+      statsDiv.innerHTML = `
+        <div class="stat-item">
+          <div class="stat-number">${total}</div>
+          <div class="stat-label">Total Lines</div>
+        </div>
+        <div class="stat-item error">
+          <div class="stat-number">${errors}</div>
+          <div class="stat-label">Errors</div>
+        </div>
+        <div class="stat-item warn">
+          <div class="stat-number">${warnings}</div>
+          <div class="stat-label">Warnings</div>
+        </div>
+        <div class="stat-item debug">
+          <div class="stat-number">${debugs}</div>
+          <div class="stat-label">Debug</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${requests}</div>
+          <div class="stat-label">Requests</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${responses}</div>
+          <div class="stat-label">Responses</div>
+        </div>
+      `;
+    }
+    
+    function showNotification(message, type) {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <img src="assets/icons/${type === 'success' ? 'check-circle' : 'exclamation-circle'}_white.svg" alt="" width="20" height="20">
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Show notification
+      setTimeout(() => notification.classList.add('show'), 100);
+      
+      // Hide notification
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => document.body.removeChild(notification), 300);
+      }, 3000);
+    }
+    function downloadResults() {
+      const filename = document.getElementById('filename').value || "logwizard_results.txt";
+      const resultsText = document.getElementById('resultsContent').innerText;
+      
+      if (!resultsText || resultsText.includes('Please paste') || resultsText.includes('No matches')) {
+        alert('No results to download. Please analyze some logs first.');
+        return;
+      }
+      
+      const blob = new Blob([resultsText], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show success feedback
+      const button = event.target.closest('button');
+      const originalText = button.innerHTML;
+      button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14"> Downloaded!';
+      button.style.background = '#2a2a2a';
+      button.style.color = '#ffffff';
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.style.background = '';
+        button.style.color = '';
+      }, 2000);
+    }
+
+    // Fullscreen functionality
+    function toggleFullscreen() {
+      const resultsDiv = document.getElementById('results');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+        // Enter fullscreen
+        if (resultsDiv.requestFullscreen) {
+          resultsDiv.requestFullscreen();
+        } else if (resultsDiv.webkitRequestFullscreen) {
+          resultsDiv.webkitRequestFullscreen();
+        } else if (resultsDiv.mozRequestFullScreen) {
+          resultsDiv.mozRequestFullScreen();
+        } else if (resultsDiv.msRequestFullscreen) {
+          resultsDiv.msRequestFullscreen();
+        }
+        fullscreenBtn.innerHTML = '⛶ Exit Fullscreen';
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+        fullscreenBtn.innerHTML = '⛶ Fullscreen';
+      }
+    }
+
+    // Update button text when fullscreen state changes
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+    document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+    document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+
+    function updateFullscreenButton() {
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      
+      if (fullscreenBtn) {
+        fullscreenBtn.innerHTML = isFullscreen ? '⛶ Exit Fullscreen' : '⛶ Fullscreen';
+      }
+    }
+  </script>
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/navbar.js"></script>
+</div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
