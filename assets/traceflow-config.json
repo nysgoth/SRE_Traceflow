@@ -1,0 +1,364 @@
+{
+  "entries": [
+    {
+      "name": "BB_prod_CL",
+      "type": "Database",
+      "isDefault": true
+    },
+    {
+      "name": "access-control",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "accessgroup-integration-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "arrangement-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "audit-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "azure-blob-storage-connector",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "backbase-identity",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "billpay-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "card-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "communication",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "confirmation",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "contact-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "content-card",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "content-enricher",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "contentservices",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "contracts-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "core-integration-service",
+      "type": "Deployment",
+      "isDefault": true
+    },
+    {
+      "name": "dashboard",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "device-management-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "digital-lending",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "digital-lending-integration-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "documents-processing-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "edge",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "employee",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "employee-app",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "engage-web-app",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "engagement",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "engagement-integration-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "event-bridge",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "fido-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "flow-party-profile-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "identity-integration-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "identity-proxy",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "ingress",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "legalentity-integration-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "lending-application",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "lending-hpa-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "lending-offer-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "limit",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "messages-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "metric",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "mobile-authentication",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "notifications-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "onboarding-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "payment-order-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "payment-p2p",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "payment-trids",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "payment-type-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "plan-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "provisioning",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "push-integration-service",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "realtime-engagement-orchestrator",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "register-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "remote-config",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "remote-config-web-app",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "reset-password-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "retail-app",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "risk-assessment-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "selfenroll-flow",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "springbootadmin",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "stream-legal-entity",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "stream-product-catalog",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "stream-transactions",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "token-converter",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "transaction-category-collector",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "transaction-enricher",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "transaction-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "user-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "user-profile-manager",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "user-segment",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "user-segments-collector",
+      "type": "Deployment",
+      "isDefault": false
+    },
+    {
+      "name": "web-authentication",
+      "type": "Deployment",
+      "isDefault": false
+    }
+  ]
+}

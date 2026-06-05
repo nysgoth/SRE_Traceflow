@@ -70,6 +70,11 @@ body.advanced-kql .container,
 body.utilities .container.utilities-container,
 body.log-analyzer #step1,
 body.json-pretty .container,
+body.configurator .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 body.interceptor .container {
   background-color: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(10px) saturate(180%);
@@ -163,16 +168,16 @@ body.advanced-kql .deploy-btn:hover {
 body.simple-kql-query input[type="text"],
 body.simple-kql-query input[type="number"],
 body.simple-kql-query textarea,
-body.simple-kql-query select,
+body.simple-kql-query select:not(.config-target-select),
 body.extended-search input[type="text"],
 body.extended-search input[type="number"],
 body.extended-search textarea,
 body.extended-search input[type="datetime-local"],
-body.extended-search select,
+body.extended-search select:not(.config-target-select),
 body.advanced-kql input[type="text"],
 body.advanced-kql input[type="number"],
 body.advanced-kql textarea,
-body.advanced-kql select {
+body.advanced-kql select:not(.config-target-select) {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
@@ -185,31 +190,31 @@ body.advanced-kql select {
 body.simple-kql-query input[type="text"]:focus,
 body.simple-kql-query input[type="number"]:focus,
 body.simple-kql-query textarea:focus,
-body.simple-kql-query select:focus,
+body.simple-kql-query select:not(.config-target-select):focus,
 body.extended-search input[type="text"]:focus,
 body.extended-search input[type="number"]:focus,
 body.extended-search textarea:focus,
 body.extended-search input[type="datetime-local"]:focus,
-body.extended-search select:focus,
+body.extended-search select:not(.config-target-select):focus,
 body.advanced-kql input[type="text"]:focus,
 body.advanced-kql input[type="number"]:focus,
 body.advanced-kql textarea:focus,
-body.advanced-kql select:focus {
+body.advanced-kql select:not(.config-target-select):focus {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(102, 126, 234, 0.5);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
   outline: none;
 }
 
-body.simple-kql-query select,
-body.extended-search select,
-body.advanced-kql select {
+body.simple-kql-query select:not(.config-target-select),
+body.extended-search select:not(.config-target-select),
+body.advanced-kql select:not(.config-target-select) {
   cursor: pointer;
 }
 
-body.simple-kql-query select option,
-body.extended-search select option,
-body.advanced-kql select option {
+body.simple-kql-query select:not(.config-target-select) option,
+body.extended-search select:not(.config-target-select) option,
+body.advanced-kql select:not(.config-target-select) option {
   background: #1a1a1a;
   color: #ffffff;
 }
@@ -1078,6 +1083,103 @@ body.advanced-kql .container > label:first-of-type {
 body.trace-extractor .step-container > .step-header {
   margin-bottom: 0 !important;
   margin-top: 0 !important;
+}
+
+/* Config target selector — Trace Extractor, Simple KQL, Advanced KQL */
+body.trace-extractor #step1 > .step-header {
+  padding-top: 0 !important;
+}
+
+body.trace-extractor #step1 > .config-target-bar,
+body.simple-kql-query .main-content > .container > .config-target-bar,
+body.advanced-kql .wrapper > .container > .config-target-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0;
+  padding: 0;
+}
+
+body.simple-kql-query .main-content > .container,
+body.advanced-kql .wrapper > .container {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(10px) saturate(180%) !important;
+  border: none !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+              0 2px 8px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body.simple-kql-query .main-content > .container:hover,
+body.advanced-kql .wrapper > .container:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+              0 2px 8px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body.simple-kql-query .main-content > .container > .global-time-range,
+body.advanced-kql .wrapper > .container > .global-time-range,
+body.trace-extractor #step1 > .global-time-range {
+  margin-top: 38px !important;
+}
+
+.config-target-select {
+  min-width: 200px;
+  max-width: 280px;
+  padding: 6px 28px 6px 10px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 12px !important;
+  line-height: 1.2;
+  height: auto;
+  font-family: 'Consolas', 'Monaco', monospace;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.config-target-select:focus {
+  outline: none;
+  box-shadow: none !important;
+}
+
+.config-target-select.database {
+  border-color: rgba(102, 126, 234, 0.5);
+  background-color: rgba(102, 126, 234, 0.12);
+}
+
+.config-target-select.service {
+  border-color: rgba(255, 167, 38, 0.45);
+  background-color: rgba(255, 167, 38, 0.1);
+}
+
+.config-target-select option {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  body.trace-extractor #step1 > .config-target-bar,
+  body.simple-kql-query .main-content > .container > .config-target-bar,
+  body.advanced-kql .wrapper > .container > .config-target-bar {
+    position: static;
+    width: 100% !important;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
 }
 
 body.trace-extractor .step-container > .step-header + .global-time-range {

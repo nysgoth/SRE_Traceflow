@@ -57,6 +57,7 @@
   </div>
 
   <script src="assets/js/common.js"></script>
+  <script src="assets/js/config.js"></script>
   <script>
     function toggleDesc(){
       const el = document.getElementById('pageDesc');
@@ -70,10 +71,10 @@
       }
     }
     // Initialize default time values
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      await TraceFlowConfig.init();
+      document.getElementById('containerName').value = TraceFlowConfig.getDefaultContainer();
       initializeTimeInputs('startTime', 'endTime');
-      
-      // Set up event listeners
       document.getElementById('generateQuery').onclick = generateExtendedQuery;
       document.getElementById('copyQuery').onclick = copyExtendedQuery;
     });
@@ -101,15 +102,16 @@
       const startUTC = new Date(startTime).toISOString();
       const endUTC = new Date(endTime).toISOString();
       
+      const dbTable = TraceFlowConfig.getDatabaseTable();
       const query = `let container_name = "${containerName}";
-let time_range = BB_prod_CL
+let time_range = ${dbTable}
 | where container_name has container_name
 | where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))
 | where log contains "${searchValue}"
 | summarize min_timestamp = min(time_t), max_timestamp = max(time_t);
 let min_time = toscalar(time_range | project min_timestamp) - 1ms;
 let max_time = toscalar(time_range | project max_timestamp) + 1ms;
-BB_prod_CL
+${dbTable}
 | where time_t between (min_time .. max_time)
 | where container_name has container_name
 | project time_t, log

@@ -7,82 +7,6 @@
   
   <link rel="stylesheet" href="assets/css/common.css">
   <link rel="stylesheet" href="assets/css/tools.css">
-  <!-- Offline-friendly: embed deployments to avoid fetch/file protocol issues -->
-  <script>
-    window.DEPLOYMENT_NAMES = [
-      "access-control",
-      "accessgroup-integration-service",
-      "arrangement-manager",
-      "audit-service",
-      "azure-blob-storage-connector",
-      "backbase-identity",
-      "billpay-service",
-      "card-manager",
-      "communication",
-      "confirmation",
-      "contact-manager",
-      "content-card",
-      "content-enricher",
-      "contentservices",
-      "contracts-flow",
-      "core-integration-service",
-      "dashboard",
-      "device-management-service",
-      "digital-lending",
-      "digital-lending-integration-service",
-      "documents-processing-flow",
-      "edge",
-      "employee",
-      "employee-app",
-      "engage-web-app",
-      "engagement",
-      "engagement-integration-service",
-      "event-bridge",
-      "fido-service",
-      "flow-party-profile-service",
-      "identity-integration-service",
-      "identity-proxy",
-      "ingress",
-      "legalentity-integration-service",
-      "lending-application",
-      "lending-hpa-flow",
-      "lending-offer-flow",
-      "limit",
-      "messages-service",
-      "metric",
-      "mobile-authentication",
-      "notifications-service",
-      "onboarding-flow",
-      "payment-order-service",
-      "payment-p2p",
-      "payment-trids",
-      "payment-type-service",
-      "plan-flow",
-      "provisioning",
-      "push-integration-service",
-      "realtime-engagement-orchestrator",
-      "register-manager",
-      "remote-config",
-      "remote-config-web-app",
-      "reset-password-flow",
-      "retail-app",
-      "risk-assessment-flow",
-      "selfenroll-flow",
-      "springbootadmin",
-      "stream-legal-entity",
-      "stream-product-catalog",
-      "stream-transactions",
-      "token-converter",
-      "transaction-category-collector",
-      "transaction-enricher",
-      "transaction-manager",
-      "user-manager",
-      "user-profile-manager",
-      "user-segment",
-      "user-segments-collector",
-      "web-authentication"
-    ];
-  </script>
   <style>
     /* Collapsible description under the title */
     .desc-content {
@@ -145,6 +69,9 @@
   <div class="wrapper" style="display:flex;justify-content:center;width:100%;">
     <!-- Extended Search Container -->
     <div class="container" style="max-width:1200px;width:100%;margin:0 auto;padding:2.5% 2.5%;">
+      <div class="config-target-bar" id="configTargetBar">
+        <select id="configEntrySelect" class="config-target-select database" title="Database or Service"></select>
+      </div>
       <!-- Global Time Range Selector -->
       <div class="global-time-range">
         <div class="time-range-header">
@@ -218,19 +145,25 @@
   </div>
 
   <script src="assets/js/common.js"></script>
+  <script src="assets/js/config.js"></script>
   <script>
-    let DEPLOYMENT_NAMES = Array.isArray(window.DEPLOYMENT_NAMES) ? window.DEPLOYMENT_NAMES.slice() : [];
+    let DEPLOYMENT_NAMES = [];
+    let selectedEntry = { name: '', type: 'Database' };
+
     async function populateDeployments(){
-      try {
-        if (!DEPLOYMENT_NAMES.length && location.protocol.startsWith('http')) {
-          // Optional fetch only when served over http(s)
-          const resp = await fetch('assets/deployments.txt');
-          if (resp.ok) {
-            const text = await resp.text();
-            DEPLOYMENT_NAMES = Array.from(new Set(text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)));
+      await TraceFlowConfig.init();
+      DEPLOYMENT_NAMES = TraceFlowConfig.getQueryTargets();
+      const containerInput = document.getElementById('containerName');
+      if (containerInput) containerInput.value = TraceFlowConfig.getDefaultContainer();
+      const configSelect = document.getElementById('configEntrySelect');
+      selectedEntry = TraceFlowConfig.initConfigEntrySelect(configSelect, {
+        onChange: (entry) => {
+          selectedEntry = entry;
+          if (entry.type === 'Service' && containerInput) {
+            containerInput.value = entry.name;
           }
-        }
-      } catch(e){ /* ignore */ }
+        },
+      }) || selectedEntry;
       const dl = document.getElementById('deploymentList');
       dl.innerHTML = '';
       DEPLOYMENT_NAMES.forEach(n => {
@@ -446,7 +379,8 @@
       const endUTC = new Date(endTime).toISOString();
       
       // Build the time_range query conditionally
-      let timeRangeQuery = `let time_range = BB_prod_CL
+      const dbTable = TraceFlowConfig.getQueryTableForEntry(selectedEntry);
+      let timeRangeQuery = `let time_range = ${dbTable}
 | where container_name has container_name
 | where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))`;
       
@@ -461,7 +395,7 @@
 ${timeRangeQuery}
 let min_time = toscalar(time_range | project min_timestamp) - ${timeOffset}ms;
 let max_time = toscalar(time_range | project max_timestamp) + ${timeOffset}ms;
-BB_prod_CL
+${dbTable}
 | where time_t between (min_time .. max_time)
 | where container_name has container_name
 | project time_t, log

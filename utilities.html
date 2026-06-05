@@ -155,7 +155,12 @@
         </div>
       </div>
       
-      <div class="action-section">
+      <div class="action-section comma-formatter-actions">
+        <label for="commaDelimiter" class="comma-delimiter-label">Quote delimiter</label>
+        <select id="commaDelimiter" class="comma-delimiter-select">
+          <option value="&quot;" selected>Double quote (")</option>
+          <option value="'">Single quote (')</option>
+        </select>
         <button onclick="formatCommaSeparated()" class="analyze-btn">
           <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
         </button>
@@ -354,29 +359,17 @@
     function formatCommaSeparated() {
       const input = document.getElementById('commaFormatterInput');
       const result = document.getElementById('commaFormatterResult');
-      const raw = input.value.trim();
-      
-      if (!raw) {
-        result.textContent = 'Please enter values';
+      const delimiter = document.getElementById('commaDelimiter')?.value || '"';
+      const output = window.formatCommaSeparatedLines(input.value, delimiter);
+
+      if (output.error) {
+        result.textContent = output.error;
         result.style.color = '#ff6b6b';
         return;
       }
-      
-      const lines = [...new Set(raw.split('\n')
-        .map(l => l.trim())
-        .filter(l => l && l.toLowerCase() !== 'traceid'))];
-      
-      if (lines.length === 0) {
-        result.textContent = 'No valid values found';
-        result.style.color = '#ff6b6b';
-        return;
-      }
-      
-      const formatted = lines.map(l => `"${l}"`).join(', ');
-      result.textContent = formatted;
+
+      result.textContent = output.formatted;
       result.style.color = '#ffffff';
-      
-      // Show success animation
       result.style.transform = 'scale(1.02)';
       setTimeout(() => result.style.transform = 'scale(1)', 200);
     }

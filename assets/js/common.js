@@ -284,7 +284,15 @@ function showSuccess(element, content) {
             <h2><img src="assets/icons/wrench_white.svg" alt="" style="width:28px;height:28px;">Utilities</h2>
             <button class="utilities-sidebar-close" id="utilitiesSidebarClose" aria-label="Close utilities panel">×</button>
           </div>
-          <div class="utilities-list" id="utilitiesList"></div>
+          <div class="utilities-sidebar-body">
+            <div class="utilities-list" id="utilitiesList"></div>
+          </div>
+          <div class="utilities-sidebar-footer">
+            <a href="configurator.html" class="utility-config-link" id="utilitiesConfigLink">
+              <img src="assets/icons/settings_white.svg" alt="" class="utility-item-icon">
+              <span class="utility-item-name">Configurator</span>
+            </a>
+          </div>
         </div>
         <div class="utilities-modal-overlay" id="utilitiesModalOverlay">
           <div class="utilities-modal" id="utilitiesModal">
@@ -318,6 +326,11 @@ function showSuccess(element, content) {
           item.addEventListener('click', () => openUtility(util.id));
           utilitiesList.appendChild(item);
         });
+        const configLink = document.getElementById('utilitiesConfigLink');
+        if (configLink && window.location.pathname.split('/').pop() === 'configurator.html') {
+          configLink.classList.add('active');
+          configLink.setAttribute('aria-current', 'page');
+        }
         console.log('✓ Utilities panel created successfully');
       } else {
         console.error('✗ Utilities list not found!');
@@ -381,7 +394,12 @@ function showSuccess(element, content) {
               <textarea id="modal-commaFormatterInput" rows="2" placeholder="Enter values separated by newlines..."></textarea>
             </div>
           </div>
-          <div class="action-section">
+          <div class="action-section comma-formatter-actions">
+            <label for="modal-commaDelimiter" class="comma-delimiter-label">Quote delimiter</label>
+            <select id="modal-commaDelimiter" class="comma-delimiter-select">
+              <option value="&quot;" selected>Double quote (")</option>
+              <option value="'">Single quote (')</option>
+            </select>
             <button onclick="modalFormatCommaSeparated()" class="analyze-btn">
               <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
             </button>
@@ -520,31 +538,40 @@ function showSuccess(element, content) {
   };
 
   // Comma-Separated Formatter functions
+  window.formatCommaSeparatedLines = function(raw, delimiter = '"') {
+    const trimmed = String(raw || '').trim();
+    if (!trimmed) {
+      return { error: 'Please enter values' };
+    }
+
+    const lines = [...new Set(trimmed.split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && line.toLowerCase() !== 'traceid'))];
+
+    if (lines.length === 0) {
+      return { error: 'No valid values found' };
+    }
+
+    const quote = delimiter === "'" ? "'" : '"';
+    return { formatted: lines.map((line) => `${quote}${line}${quote}`).join(', ') };
+  };
+
   window.modalFormatCommaSeparated = function() {
     const input = document.getElementById('modal-commaFormatterInput');
     const result = document.getElementById('modal-commaFormatterResult');
+    const delimiterSelect = document.getElementById('modal-commaDelimiter');
     if (!input || !result) return;
-    
-    const raw = input.value.trim();
-    
-    if (!raw) {
-      result.textContent = 'Please enter values';
+
+    const delimiter = delimiterSelect?.value || '"';
+    const output = window.formatCommaSeparatedLines(input.value, delimiter);
+
+    if (output.error) {
+      result.textContent = output.error;
       result.style.color = '#ff6b6b';
       return;
     }
-    
-    const lines = [...new Set(raw.split('\n')
-      .map(l => l.trim())
-      .filter(l => l && l.toLowerCase() !== 'traceid'))];
-    
-    if (lines.length === 0) {
-      result.textContent = 'No valid values found';
-      result.style.color = '#ff6b6b';
-      return;
-    }
-    
-    const formatted = lines.map(l => `"${l}"`).join(', ');
-    result.textContent = formatted;
+
+    result.textContent = output.formatted;
     result.style.color = '#ffffff';
     result.style.transform = 'scale(1.02)';
     setTimeout(() => result.style.transform = 'scale(1)', 200);

@@ -33,6 +33,9 @@
 
     <!-- Main Container -->
     <div class="container">
+      <div class="config-target-bar" id="configTargetBar">
+        <select id="configEntrySelect" class="config-target-select database" title="Database or Service"></select>
+      </div>
       <!-- Global Time Range Selector -->
       <div class="global-time-range">
         <div class="time-range-header">
@@ -100,6 +103,7 @@
     </div>
   </div>
 
+  <script src="assets/js/config.js"></script>
   <script>
     function toggleDesc(){
       const el = document.getElementById('pageDesc');
@@ -113,8 +117,19 @@
       }
     }
 
+    let selectedEntry = { name: '', type: 'Database' };
+
+    function initConfigTargetBar() {
+      const select = document.getElementById('configEntrySelect');
+      selectedEntry = TraceFlowConfig.initConfigEntrySelect(select, {
+        onChange: (entry) => { selectedEntry = entry; },
+      }) || selectedEntry;
+    }
+
     // Global time range management
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      await TraceFlowConfig.init();
+      initConfigTargetBar();
       const now = new Date();
       const tenAgo = new Date(now - 10 * 60000);
       const toI = dt => {
@@ -283,8 +298,10 @@
       const sUTC = new Date(s).toISOString();
       const eUTC = new Date(e).toISOString();
 
-      const q = `BB_prod_CL
-| where time_t between (datetime('${sUTC}') .. datetime('${eUTC}'))
+      const table = TraceFlowConfig.getQueryTableForEntry(selectedEntry);
+      const containerFilter = TraceFlowConfig.getContainerFilterForEntry(selectedEntry);
+      const q = `${table}
+| where time_t between (datetime('${sUTC}') .. datetime('${eUTC}'))${containerFilter}
 | where log has_any (${traces})
 | extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log)
 | extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log)

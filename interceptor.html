@@ -16,14 +16,60 @@
         max-width: 1200px;
         margin: 0 auto;
       }
-      #searchFilter {
+      body.interceptor .input-section {
+        margin-bottom: 28px;
+      }
+      body.interceptor .input-wrapper label {
+        margin-bottom: 12px;
+      }
+      body.interceptor .output-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 30px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      body.interceptor .output-header h2 {
+        margin: 0;
+      }
+      body.interceptor .output-header .color-legend {
+        margin: 0;
+        flex: 1;
+        justify-content: flex-end;
+        padding: 4px 10px;
+        min-width: 0;
+      }
+      body.interceptor #inputLogs {
+        min-height: 90px;
+        resize: vertical;
+      }
+      body.interceptor #searchFilter {
         width: 100%;
+        margin-bottom: 0;
+      }
+      body.interceptor .search-filter-section {
         margin-bottom: 20px;
+      }
+      body.interceptor .search-filter-section .checkbox-row {
+        margin-top: 10px;
+        margin-bottom: 0;
+      }
+      .output-wrap.hidden {
+        display: none;
       }
       .dropdown {
         margin: 10px 0;
         border-radius: 12px;
         overflow: hidden;
+        border: 2px solid transparent;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .dropdown.open {
+        border-color: rgba(102, 126, 234, 0.75);
+        box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.25),
+                    0 4px 20px rgba(102, 126, 234, 0.2);
       }
       .dropdown-content {
         display: none;
@@ -36,6 +82,9 @@
         font-family: 'Consolas', 'Monaco', monospace;
         font-size: 13px;
       }
+      .dropdown.open .dropdown-content {
+        display: block;
+      }
       .dropdown-button {
         width: 100%;
         padding: 12px 16px;
@@ -46,6 +95,9 @@
         transition: all 0.3s ease;
         font-size: 14px;
         font-weight: 500;
+      }
+      .dropdown.open .dropdown-button {
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
       }
       .dropdown.failed .dropdown-button,
       .dropdown-button.failed {
@@ -66,6 +118,11 @@
       .dropdown-button.corrupted {
         background: #f574cc !important;
         color: #000;
+      }
+      .dropdown.success .dropdown-button,
+      .dropdown-button.success {
+        background: #28a745 !important;
+        color: #fff;
       }
       .dropdown-button:hover {
         opacity: 0.9;
@@ -92,6 +149,17 @@
         border-color: rgba(102, 126, 234, 0.7);
         transform: translateY(-1px);
       }
+      .action-buttons button.show-issue-btn {
+        background: #ffa726;
+        border-color: #fb8c00;
+        color: #000;
+        font-weight: 600;
+      }
+      .action-buttons button.show-issue-btn:hover {
+        background: #ffb74d;
+        border-color: #ffa726;
+        color: #000;
+      }
       #clearFilter {
         display: none;
         background: #dc3545 !important;
@@ -112,33 +180,105 @@
         flex-direction: column;
         justify-content: flex-start;
         gap: 15px;
+        margin-top: 0;
         margin-bottom: 20px;
       }
       .checkbox-row {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        white-space: nowrap;
-        gap: 20px;
-        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 10px;
+        width: 100%;
+        align-self: stretch;
+        flex-wrap: nowrap;
+        padding: 0;
+        background: none;
+        border: none;
+        box-sizing: border-box;
       }
       .checkbox-row label {
         margin: 0;
+        flex: 1;
+        min-width: 0;
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
-        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
         cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        line-height: 1.3;
+        user-select: none;
+      }
+      .checkbox-row label:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+      .checkbox-row label:has(input:checked) {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.4));
+        border-color: rgba(102, 126, 234, 0.7);
+        color: #fff;
+        box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
       .checkbox-row input[type="checkbox"] {
-        width: auto;
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
         margin: 0;
-        cursor: pointer;
+        pointer-events: none;
+      }
+      .checkbox-row label::before {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        background: rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+      }
+      .checkbox-row label:has(input:checked)::before {
+        background: #667eea;
+        border-color: #667eea;
+        box-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='white' stroke-width='2' d='M2 6l3 3 5-5'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 10px;
+      }
+      @media (max-width: 900px) {
+        .checkbox-row {
+          flex-wrap: wrap;
+        }
+        .checkbox-row label {
+          flex: 1 1 calc(50% - 5px);
+        }
       }
       .button-row {
         display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
+        width: 100%;
+        align-self: stretch;
+      }
+      .button-row .button-group {
+        display: flex;
+        flex: 1;
+        width: 100%;
+        margin-top: 0;
+        flex-wrap: nowrap;
+        gap: 12px;
+      }
+      .button-row .button-group button {
+        flex: 1;
+        min-width: 0;
       }
       .dropdown-content h3 {
         color: #fff;
@@ -151,6 +291,32 @@
         border-top: 1px solid rgba(255, 255, 255, 0.2);
         margin: 15px 0;
       }
+      .additional-info-section {
+        scroll-margin-top: 12px;
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: rgba(255, 167, 38, 0.2);
+        border: 1px solid rgba(255, 167, 38, 0.5);
+        border-left: 4px solid #ffa726;
+        border-radius: 8px;
+        transition: background 0.3s ease, box-shadow 0.3s ease;
+      }
+      .additional-info-section.issue-highlight {
+        background: rgba(255, 167, 38, 0.32);
+        box-shadow: 0 0 0 2px rgba(255, 167, 38, 0.6),
+                    0 4px 18px rgba(255, 167, 38, 0.25);
+      }
+      .additional-info-section h3 {
+        color: #ffcc80;
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+      .dropdown-content .additional-info-section pre {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 167, 38, 0.3);
+        color: #fff;
+        margin: 0;
+      }
       .dropdown-content pre {
         background: rgba(0, 0, 0, 0.3);
         padding: 12px;
@@ -162,31 +328,35 @@
       .color-legend {
         display: flex;
         flex-wrap: wrap;
-        gap: 15px;
-        padding: 15px 20px;
+        gap: 6px 14px;
+        padding: 8px 14px;
         background: rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        margin: 20px 0;
+        border-radius: 10px;
+        margin: 12px 0;
         align-items: center;
       }
       .color-legend h3 {
         margin: 0;
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 600;
-        color: rgba(255, 255, 255, 0.9);
-        margin-right: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-right: 4px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
       }
       .legend-item {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 8px;
-        font-size: 13px;
+        gap: 5px;
+        font-size: 11px;
+        white-space: nowrap;
       }
       .legend-color {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
         flex-shrink: 0;
         border: 1px solid rgba(255, 255, 255, 0.2);
       }
@@ -202,12 +372,169 @@
       .legend-color.corrupted {
         background: #f574cc;
       }
-      .legend-color.default {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+      .legend-color.success {
+        background: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.6);
       }
       .legend-item span {
-        color: rgba(255, 255, 255, 0.85);
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .api-group {
+        margin-bottom: 16px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .api-group-header {
+        width: 100%;
+        padding: 14px 18px;
+        text-align: left;
+        border: none;
+        background: rgba(102, 126, 234, 0.3);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .api-group-header:hover {
+        background: rgba(102, 126, 234, 0.45);
+      }
+      .api-group-header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .api-group-header .api-group-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow: hidden;
+        min-width: 0;
+        flex: 1;
+      }
+      .api-method-pill {
+        flex-shrink: 0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        line-height: 1;
+      }
+      .api-method-pill.get {
+        background: rgba(76, 175, 80, 0.3);
+        color: #b9f6ca;
+        border: 1px solid rgba(76, 175, 80, 0.5);
+      }
+      .api-method-pill.post {
+        background: rgba(102, 126, 234, 0.45);
+        color: #dce3ff;
+        border: 1px solid rgba(102, 126, 234, 0.65);
+      }
+      .api-method-pill.put {
+        background: rgba(255, 167, 38, 0.3);
+        color: #ffe0b2;
+        border: 1px solid rgba(255, 167, 38, 0.55);
+      }
+      .api-method-pill.patch {
+        background: rgba(171, 71, 188, 0.3);
+        color: #e1bee7;
+        border: 1px solid rgba(171, 71, 188, 0.55);
+      }
+      .api-method-pill.delete {
+        background: rgba(220, 53, 69, 0.35);
+        color: #ffcdd2;
+        border: 1px solid rgba(220, 53, 69, 0.55);
+      }
+      .api-method-pill.head,
+      .api-method-pill.options {
+        background: rgba(158, 158, 158, 0.3);
+        color: #eeeeee;
+        border: 1px solid rgba(158, 158, 158, 0.5);
+      }
+      .api-group-url {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.95);
+      }
+      .api-group-header .api-group-meta {
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.75);
+        flex-shrink: 0;
+      }
+      .api-group-status-bar {
+        display: flex;
+        width: 100%;
+        height: 10px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .api-group-status-segment {
+        height: 100%;
+        min-width: 3px;
+        transition: opacity 0.2s ease;
+      }
+      .api-group-status-segment.success {
+        background: #28a745;
+      }
+      .api-group-status-segment.warning {
+        background: #ffa726;
+      }
+      .api-group-status-segment.failed {
+        background: #dc3545;
+      }
+      .api-group-status-segment.omitted {
+        background: #a9a9a9;
+      }
+      .api-group-status-segment.corrupted {
+        background: #f574cc;
+      }
+      .api-group-status-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        font-size: 11px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .api-group-status-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .api-group-status-legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .api-group-status-legend-dot.success { background: #28a745; }
+      .api-group-status-legend-dot.warning { background: #ffa726; }
+      .api-group-status-legend-dot.failed { background: #dc3545; }
+      .api-group-status-legend-dot.omitted { background: #a9a9a9; }
+      .api-group-status-legend-dot.corrupted { background: #f574cc; }
+      .api-group-content {
+        display: none;
+        padding: 8px 10px 10px;
+        background: rgba(0, 0, 0, 0.15);
+      }
+      .api-group-content.open {
+        display: block;
+      }
+      .api-group-content .dropdown {
+        margin: 8px 0;
       }
     </style>
   </head>
@@ -230,68 +557,88 @@
       </div>
 
       <div class="container">
-        <label for="inputLogs">Input Logs:</label>
-        <textarea id="inputLogs" placeholder="Paste your logs here"></textarea>
+        <div class="input-section">
+          <div class="input-wrapper">
+            <label for="inputLogs">Input Logs</label>
+            <textarea id="inputLogs" rows="4" placeholder="Paste or upload your logs here"></textarea>
+          </div>
+        </div>
 
-        <label for="searchFilter">Search Filter:</label>
-        <input
-          type="text"
-          id="searchFilter"
-          placeholder="Enter a search filter string (e.g. endpoint URL)"
-        />
+        <div class="input-section search-filter-section">
+          <div class="input-wrapper">
+            <label for="searchFilter">Search Filter</label>
+            <input
+              type="text"
+              id="searchFilter"
+              placeholder="Enter a search filter string (e.g. endpoint URL)"
+            />
+            <div class="checkbox-row">
+              <label>
+                <input type="checkbox" id="hideOmitted" />
+                <span>Hide omitted</span>
+              </label>
+              <label>
+                <input type="checkbox" id="showErrorsOnly" />
+                <span>Show errors only</span>
+              </label>
+              <label>
+                <input type="checkbox" id="showWarningsOnly" />
+                <span>Show warn only</span>
+              </label>
+              <label>
+                <input type="checkbox" id="enableTraceId" />
+                <span title="Show all requests with same trace ID">Same trace ID</span>
+              </label>
+            </div>
+          </div>
+        </div>
 
         <div id="controls">
-          <div class="checkbox-row">
-            <label>
-              <input type="checkbox" id="hideOmitted" />
-              Hide omitted
-            </label>
-            <label>
-              <input type="checkbox" id="showErrorsOnly" />
-              Show errors only
-            </label>
-            <label>
-              <input type="checkbox" id="enableTraceId" />
-              Show all requests with same trace ID
-            </label>
-          </div>
-
           <div class="button-row">
-            <button class="analyze-btn" onclick="processLogs()">
-              <img src="assets/icons/play_white.svg" alt="" width="16" height="16"> Process
-            </button>
-            <button class="analyze-btn" id="clearFilter" onclick="clearFilter()">
-              Clear Filter
-            </button>
+            <div class="button-group">
+              <input type="file" id="fileInput" accept=".txt,.log,.csv" style="display: none;" onchange="handleFileUpload(event)">
+              <button id="uploadBtn" onclick="document.getElementById('fileInput').click()" class="upload-btn">
+                <img src="assets/icons/download_white.svg" alt="" width="16" height="16" style="transform: rotate(180deg);"> Upload File
+              </button>
+              <button class="analyze-btn" onclick="processLogs()">
+                <img src="assets/icons/play_white.svg" alt="" width="16" height="16"> Process
+              </button>
+              <button class="analyze-btn" id="clearFilter" onclick="clearFilter()">
+                Clear Filter
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="color-legend">
-          <h3>Request Status Colors:</h3>
-          <div class="legend-item">
-            <div class="legend-color failed"></div>
-            <span>Failed (non-200 status)</span>
+        <div id="outputWrap" class="output-wrap hidden">
+          <div class="output-header">
+            <h2 id="outputSection">Output:</h2>
+            <div class="color-legend">
+              <h3>Status</h3>
+              <div class="legend-item" title="Non-200 status">
+                <div class="legend-color failed"></div>
+                <span>Failed</span>
+              </div>
+              <div class="legend-item" title="Has Additional_Info">
+                <div class="legend-color warning"></div>
+                <span>Warning</span>
+              </div>
+              <div class="legend-item" title="Payloads omitted">
+                <div class="legend-color omitted"></div>
+                <span>Omitted</span>
+              </div>
+              <div class="legend-item" title="Missing fields">
+                <div class="legend-color corrupted"></div>
+                <span>Corrupted</span>
+              </div>
+              <div class="legend-item" title="200 status, no warnings">
+                <div class="legend-color success"></div>
+                <span>Success</span>
+              </div>
+            </div>
           </div>
-          <div class="legend-item">
-            <div class="legend-color warning"></div>
-            <span>Warning (has Additional_Info)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color omitted"></div>
-            <span>Omitted (payloads omitted)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color corrupted"></div>
-            <span>Corrupted (missing fields)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color default"></div>
-            <span>Success (200 status, no warnings)</span>
-          </div>
+          <div id="output"></div>
         </div>
-
-        <h2 style="margin-top: 30px;">Output:</h2>
-        <div id="output"></div>
       </div>
     </div>
 
@@ -322,6 +669,24 @@
           processLogs();
         }
       });
+
+      let uploadedFileContent = "";
+
+      function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedFileContent = e.target.result;
+          document.getElementById('inputLogs').value = uploadedFileContent;
+        };
+        reader.onerror = function() {
+          alert('Error reading file');
+        };
+        reader.readAsText(file);
+      }
+
       const OMITTED = 'omitted'
       const NOT_FOUND = 'CONTENT_NOT_FOUND'
       const BLANK = '__'
@@ -424,14 +789,364 @@
         }
       }
 
+      function parseRequestUrl(requestUrl) {
+        if (!requestUrl || requestUrl === NOT_FOUND) {
+          return { method: null, displayUrl: "(unknown)", groupKey: "(unknown)" };
+        }
+
+        let decoded = requestUrl;
+        try {
+          decoded = decodeURIComponent(requestUrl);
+        } catch {}
+
+        decoded = decoded.replace(/^\/+/, "");
+        const methodMatch = decoded.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+)$/i);
+
+        if (methodMatch) {
+          const method = methodMatch[1].toUpperCase();
+          const urlPart = methodMatch[2].split("?")[0].trim();
+          return {
+            method,
+            displayUrl: urlPart,
+            groupKey: `${method} ${urlPart}`,
+          };
+        }
+
+        const withoutQuery = decoded.split("?")[0].trim();
+        if (/^https?:\/\//i.test(withoutQuery)) {
+          return { method: null, displayUrl: withoutQuery, groupKey: withoutQuery };
+        }
+
+        try {
+          const pathname = new URL(withoutQuery, "http://local").pathname;
+          if (pathname && pathname !== "/") {
+            return { method: null, displayUrl: withoutQuery, groupKey: pathname };
+          }
+        } catch {}
+
+        return { method: null, displayUrl: withoutQuery, groupKey: withoutQuery };
+      }
+
+      function getApiType(requestUrl) {
+        return parseRequestUrl(requestUrl).groupKey;
+      }
+
+      function createApiGroupTitle(requestUrl) {
+        const parsed = parseRequestUrl(requestUrl);
+        const title = document.createElement("div");
+        title.className = "api-group-title";
+
+        if (parsed.method) {
+          const pill = document.createElement("span");
+          pill.className = `api-method-pill ${parsed.method.toLowerCase()}`;
+          pill.textContent = parsed.method;
+          title.appendChild(pill);
+        }
+
+        const urlSpan = document.createElement("span");
+        urlSpan.className = "api-group-url";
+        urlSpan.textContent = parsed.displayUrl;
+        title.appendChild(urlSpan);
+
+        return title;
+      }
+
+      function hasAdditionalInfo(result) {
+        try {
+          return !!(
+            result.responsePayload &&
+            result.responsePayload.Additional_Info &&
+            result.responsePayload.Additional_Info.length != 0
+          );
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function getRequestStatusCategory(result) {
+        if (result.isCorruptedLine) return "corrupted";
+        const isOmitted =
+          result.requestPayload === OMITTED &&
+          result.responsePayload === OMITTED;
+        if (isOmitted) return "omitted";
+        const isFailed =
+          result.responseStatus !== "200" ||
+          (result.responsePayload &&
+            result.responsePayload.Http_Response_Code &&
+            result.responsePayload.Http_Response_Code != 200);
+        if (isFailed) return "failed";
+        if (hasAdditionalInfo(result)) return "warning";
+        return "success";
+      }
+
+      const STATUS_LABELS = {
+        success: "Success",
+        warning: "Warning",
+        failed: "Failed",
+        omitted: "Omitted",
+        corrupted: "Corrupted",
+      };
+
+      const STATUS_BAR_ORDER = ["success", "warning", "failed", "omitted", "corrupted"];
+
+      function countRequestStatuses(items) {
+        const counts = { success: 0, warning: 0, failed: 0, omitted: 0, corrupted: 0 };
+        items.forEach((result) => {
+          counts[getRequestStatusCategory(result)]++;
+        });
+        return counts;
+      }
+
+      function createStatusBar(counts) {
+        const bar = document.createElement("div");
+        bar.className = "api-group-status-bar";
+        bar.setAttribute("role", "img");
+
+        STATUS_BAR_ORDER.forEach((status) => {
+          const count = counts[status];
+          if (!count) return;
+          const segment = document.createElement("div");
+          segment.className = `api-group-status-segment ${status}`;
+          segment.style.flex = String(count);
+          segment.title = `${STATUS_LABELS[status]}: ${count}`;
+          bar.appendChild(segment);
+        });
+
+        const summary = STATUS_BAR_ORDER
+          .filter((status) => counts[status] > 0)
+          .map((status) => `${STATUS_LABELS[status]}: ${counts[status]}`)
+          .join(", ");
+        bar.setAttribute("aria-label", summary);
+        return bar;
+      }
+
+      function createStatusLegend(counts) {
+        const legend = document.createElement("div");
+        legend.className = "api-group-status-legend";
+
+        STATUS_BAR_ORDER.forEach((status) => {
+          const count = counts[status];
+          if (!count) return;
+          const item = document.createElement("span");
+          item.className = "api-group-status-legend-item";
+          const dot = document.createElement("span");
+          dot.className = `api-group-status-legend-dot ${status}`;
+          item.appendChild(dot);
+          item.appendChild(document.createTextNode(`${count} ${STATUS_LABELS[status].toLowerCase()}`));
+          legend.appendChild(item);
+        });
+
+        return legend;
+      }
+
+      function createResultDropdown(result) {
+        const dropdown = document.createElement("div");
+        dropdown.className = "dropdown ".concat(getDropdownBackgroundClasses(result));
+
+        const button = document.createElement("button");
+        const label = `(${result.timestamp}) ${result.responseStatus === NOT_FOUND ? BLANK : result.responseStatus} (${result.responseTime === NOT_FOUND ? BLANK : result.responseTime}) ${result.requestUrl}`;
+        button.className = "dropdown-button".concat(getDropdownBackgroundClasses(result));
+        button.textContent = label;
+        button.type = "button";
+        button.onclick = (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle("open");
+        };
+
+        const content = document.createElement("div");
+        content.className = "dropdown-content";
+
+        const actionButtons = document.createElement("div");
+        actionButtons.className = "action-buttons";
+
+        const copyRequestPayloadButton = document.createElement("button");
+        copyRequestPayloadButton.textContent = "Copy Request Payload";
+        copyRequestPayloadButton.onclick = () => {
+          navigator.clipboard.writeText(JSON.stringify(result.requestPayload, null, 2));
+        };
+
+        const copyResponsePayloadButton = document.createElement("button");
+        copyResponsePayloadButton.textContent = "Copy Response Payload";
+        copyResponsePayloadButton.onclick = () => {
+          navigator.clipboard.writeText(JSON.stringify(result.responsePayload, null, 2));
+        };
+
+        const copySpanIdButton = document.createElement("button");
+        copySpanIdButton.textContent = "Copy Span ID";
+        copySpanIdButton.onclick = () => {
+          navigator.clipboard.writeText(result.spanId);
+        };
+
+        const copyTraceIdButton = document.createElement("button");
+        copyTraceIdButton.textContent = "Copy trace ID";
+        copyTraceIdButton.onclick = () => {
+          navigator.clipboard.writeText(result.traceId);
+        };
+
+        const filterBySpanIdButton = document.createElement("button");
+        filterBySpanIdButton.textContent = "Filter by Span ID";
+        filterBySpanIdButton.onclick = () => {
+          document.getElementById("searchFilter").value = result.spanId;
+          processLogs();
+        };
+
+        const ssbTraceIdButton = document.createElement("button");
+        ssbTraceIdButton.textContent = "Copy ssb-traceid";
+        ssbTraceIdButton.onclick = () => {
+          const ssbTraceId = result.responseHeaders["ssb-traceid"].replaceAll("]", "");
+          if (ssbTraceId) {
+            navigator.clipboard.writeText(ssbTraceId);
+          } else {
+            alert("Could not find ssb-traceid in the response headers.");
+          }
+        };
+
+        const reportButton = document.createElement("button");
+        reportButton.textContent = "Copy Report";
+        reportButton.onclick = () => {
+          generateReport(result);
+        };
+
+        if (hasAdditionalInfo(result)) {
+          const showIssueButton = document.createElement("button");
+          showIssueButton.className = "show-issue-btn";
+          showIssueButton.textContent = "Show Issue";
+          showIssueButton.onclick = () => {
+            dropdown.classList.add("open");
+            requestAnimationFrame(() => {
+              const issueSection = content.querySelector(".additional-info-section");
+              if (issueSection) {
+                issueSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                issueSection.classList.add("issue-highlight");
+                setTimeout(() => issueSection.classList.remove("issue-highlight"), 2000);
+              }
+            });
+          };
+          actionButtons.appendChild(showIssueButton);
+        }
+
+        actionButtons.appendChild(copyRequestPayloadButton);
+        actionButtons.appendChild(copyResponsePayloadButton);
+        actionButtons.appendChild(copySpanIdButton);
+        actionButtons.appendChild(copyTraceIdButton);
+        actionButtons.appendChild(filterBySpanIdButton);
+        actionButtons.appendChild(ssbTraceIdButton);
+        actionButtons.appendChild(reportButton);
+
+        const requestContent = `${formatHeaders(result.requestHeaders)}\n\n`.concat(
+          `${JSON.stringify(result.requestPayload, null, 2)}\n\n`
+        );
+        const responseContent = `${formatHeaders(result.responseHeaders)}\n\n`.concat(
+          `${JSON.stringify(result.responsePayload, null, 2)}\n\n`
+        );
+        const footerContent = `Full Logline:\n${result.logLine}`;
+
+        const requestPre = document.createElement("pre");
+        const responsePre = document.createElement("pre");
+        const footerPre = document.createElement("pre");
+        const requestTitle = document.createElement("h3");
+        requestTitle.innerHTML = "Request:";
+        const responseTitle = document.createElement("h3");
+        responseTitle.innerHTML = "Response:";
+        requestPre.textContent = requestContent;
+        responsePre.textContent = responseContent;
+        footerPre.textContent = footerContent;
+
+        content.appendChild(actionButtons);
+        content.appendChild(requestTitle);
+        content.appendChild(requestPre);
+        content.appendChild(document.createElement("hr"));
+        content.appendChild(responseTitle);
+        content.appendChild(responsePre);
+
+        if (hasAdditionalInfo(result)) {
+          const issueSection = document.createElement("div");
+          issueSection.className = "additional-info-section";
+          const issueTitle = document.createElement("h3");
+          issueTitle.textContent = "Additional_Info:";
+          const issuePre = document.createElement("pre");
+          issuePre.textContent = JSON.stringify(
+            result.responsePayload.Additional_Info,
+            null,
+            2
+          );
+          issueSection.appendChild(issueTitle);
+          issueSection.appendChild(issuePre);
+          content.appendChild(issueSection);
+        }
+
+        content.appendChild(document.createElement("hr"));
+        content.appendChild(footerPre);
+
+        dropdown.appendChild(button);
+        dropdown.appendChild(content);
+        return dropdown;
+      }
+
+      function renderResults(results) {
+        const outputDiv = document.getElementById("output");
+        outputDiv.innerHTML = "";
+
+        const groups = new Map();
+        results.forEach((result) => {
+          const apiType = getApiType(result.requestUrl);
+          if (!groups.has(apiType)) {
+            groups.set(apiType, []);
+          }
+          groups.get(apiType).push(result);
+        });
+
+        const sortedApiTypes = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+        sortedApiTypes.forEach((apiType) => {
+          const items = groups.get(apiType);
+          const statusCounts = countRequestStatuses(items);
+
+          const group = document.createElement("div");
+          group.className = "api-group";
+
+          const header = document.createElement("button");
+          header.className = "api-group-header";
+          header.type = "button";
+
+          const headerTop = document.createElement("div");
+          headerTop.className = "api-group-header-top";
+          const title = createApiGroupTitle(items[0].requestUrl);
+          const meta = document.createElement("span");
+          meta.className = "api-group-meta";
+          meta.textContent = `${items.length} request${items.length !== 1 ? "s" : ""}`;
+          headerTop.appendChild(title);
+          headerTop.appendChild(meta);
+
+          header.appendChild(headerTop);
+          header.appendChild(createStatusBar(statusCounts));
+          header.appendChild(createStatusLegend(statusCounts));
+
+          const groupContent = document.createElement("div");
+          groupContent.className = "api-group-content";
+
+          header.onclick = () => {
+            groupContent.classList.toggle("open");
+          };
+
+          items.forEach((result) => {
+            groupContent.appendChild(createResultDropdown(result));
+          });
+
+          group.appendChild(header);
+          group.appendChild(groupContent);
+          outputDiv.appendChild(group);
+        });
+      }
+
       function processLogs() {
-        const inputLogs = document.getElementById("inputLogs").value;
+        const inputLogs = uploadedFileContent.trim() || document.getElementById("inputLogs").value;
         const searchFilter = document
           .getElementById("searchFilter")
           .value.toLowerCase();
         const hideOmitted = document.getElementById("hideOmitted").checked;
         const enableTraceId = document.getElementById("enableTraceId").checked;
         const showErrorsOnly = document.getElementById("showErrorsOnly").checked;
+        const showWarningsOnly = document.getElementById("showWarningsOnly").checked;
 
         const logLines = inputLogs.split("\n");
         let parsingErrorCounter = 0;
@@ -473,8 +1188,20 @@
           finalResults = results;
         }
 
-        if(showErrorsOnly) {
-          finalResults = finalResults.filter(res => res.responseStatus != '200')
+        if (showErrorsOnly) {
+          finalResults = finalResults.filter((res) => res.responseStatus != '200');
+        }
+
+        if (showWarningsOnly) {
+          finalResults = finalResults.filter(
+            (res) => getRequestStatusCategory(res) === 'warning'
+          );
+        }
+
+        finalResults = finalResults.filter((result) => result);
+
+        if (hideOmitted) {
+          finalResults = finalResults.filter((result) => !result.isOmitted);
         }
 
         finalResults.sort((a, b) => {
@@ -494,144 +1221,14 @@
           clearFilterButton.style.display = "none";
         }
 
-        const outputDiv = document.getElementById("output");
-        outputDiv.innerHTML = "";
+        document.getElementById("outputWrap").classList.remove("hidden");
+        renderResults(finalResults);
 
-        finalResults.forEach((result) => {
-          if (hideOmitted && result.isOmitted) {
-            return; // Skip omitted results if the checkbox is checked
-          }
-          const dropdown = document.createElement("div");
-
-          dropdown.className = "dropdown ".concat(
-            getDropdownBackgroundClasses(result)
-          );
-
-          const button = document.createElement("button");
-          const label = `(${result.timestamp}) ${result.responseStatus === NOT_FOUND ? BLANK : result.responseStatus} (${result.responseTime === NOT_FOUND ? BLANK : result.responseTime}) ${result.requestUrl}`;
-
-          button.className = "dropdown-button".concat(
-            getDropdownBackgroundClasses(result)
-          );
-
-          button.textContent = label;
-          button.onclick = () => {
-            const content = dropdown.querySelector(".dropdown-content");
-            content.style.display =
-              content.style.display === "none" ? "block" : "none";
-          };
-
-          const content = document.createElement("div");
-          content.className = "dropdown-content";
-
-          // Add a div to hold the action buttons
-          const actionButtons = document.createElement("div");
-          actionButtons.className = "action-buttons";
-
-          // Add a copy Payload button
-          const copyRequestPayloadButton = document.createElement("button");
-          copyRequestPayloadButton.textContent = "Copy Request Payload";
-          copyRequestPayloadButton.onclick = () => {
-            navigator.clipboard.writeText(
-              JSON.stringify(result.requestPayload, null, 2)
-            );
-          };
-
-          const copyResponsePayloadButton = document.createElement("button");
-          copyResponsePayloadButton.textContent = "Copy Response Payload";
-          copyResponsePayloadButton.onclick = () => {
-            navigator.clipboard.writeText(
-              JSON.stringify(result.responsePayload, null, 2)
-            );
-          };
-
-          // Add a copy span ID button
-          const copySpanIdButton = document.createElement("button");
-          copySpanIdButton.textContent = "Copy Span ID";
-          copySpanIdButton.onclick = () => {
-            navigator.clipboard.writeText(result.spanId);
-          };
-
-          // Add a copy trace ID button
-          const copyTraceIdButton = document.createElement("button");
-          copyTraceIdButton.textContent = "Copy trace ID";
-          copyTraceIdButton.onclick = () => {
-            navigator.clipboard.writeText(result.traceId);
-          };
-
-          // Add a filter button
-          const filterBySpanIdButton = document.createElement("button");
-          filterBySpanIdButton.textContent = "Filter by Span ID";
-          filterBySpanIdButton.onclick = () => {
-            document.getElementById("searchFilter").value = result.spanId;
-            processLogs(); // Re-process the logs to apply the filter
-          };
-
-          // Add a copy ssb traceid button
-          const ssbTraceIdButton = document.createElement("button");
-          ssbTraceIdButton.textContent = "Copy ssb-traceid";
-          ssbTraceIdButton.onclick = () => {
-            const ssbTraceId = result.responseHeaders['ssb-traceid'].replaceAll(']','');
-            if(ssbTraceId) {
-              navigator.clipboard.writeText(ssbTraceId);
-            } else {
-              alert('Could not find ssb-traceid in the response headers.');
-            }
-          };
-
-          // Add a copy report button
-          const reportButton = document.createElement("button");
-          reportButton.textContent = "Copy Report";
-          reportButton.onclick = () => {
-            generateReport(result);
-          };
-
-          actionButtons.appendChild(copyRequestPayloadButton);
-          actionButtons.appendChild(copyResponsePayloadButton);
-          actionButtons.appendChild(copySpanIdButton);
-          actionButtons.appendChild(copyTraceIdButton);
-          actionButtons.appendChild(filterBySpanIdButton);
-          actionButtons.appendChild(ssbTraceIdButton);
-          actionButtons.appendChild(reportButton);
-
-          let requestContent = `${formatHeaders(
-            result.requestHeaders
-          )}\n\n`.concat(
-            `${JSON.stringify(result.requestPayload, null, 2)}\n\n`
-          );
-
-          let responseContent = `${formatHeaders(
-            result.responseHeaders
-          )}\n\n`.concat(
-            `${JSON.stringify(result.responsePayload, null, 2)}\n\n`
-          );
-
-          let footerContent = `Full Logline:\n${result.logLine}`;
-
-          const requestPre = document.createElement("pre");
-          const responsePre = document.createElement("pre");
-          const footerPre = document.createElement("pre");
-          const requestTitle = document.createElement("h3");
-          requestTitle.innerHTML = "Request:";
-          const responseTitle = document.createElement("h3");
-          responseTitle.innerHTML = "Response:";
-          requestPre.textContent = requestContent;
-          responsePre.textContent = responseContent;
-          footerPre.textContent = footerContent;
-
-          content.appendChild(actionButtons);
-
-          content.appendChild(requestTitle);
-          content.appendChild(requestPre);
-          content.appendChild(document.createElement("hr"));
-          content.appendChild(responseTitle);
-          content.appendChild(responsePre);
-          content.appendChild(document.createElement("hr"));
-          content.appendChild(footerPre);
-
-          dropdown.appendChild(button);
-          dropdown.appendChild(content);
-          outputDiv.appendChild(dropdown);
+        requestAnimationFrame(() => {
+          document.getElementById("outputSection").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         });
       }
 
@@ -649,25 +1246,13 @@
           result.responsePayload === OMITTED;
         const isFailedResponse =
           result.responseStatus !== "200" ||
-          (result.responsePayload.Http_Response_Code && 
+          (result.responsePayload.Http_Response_Code &&
            result.responsePayload.Http_Response_Code != 200);
-        let shouldBeWarning = false;
 
-        if (!isOmitted) {
-          try {
-            shouldBeWarning =
-              result.responsePayload &&
-              result.responsePayload.Additional_Info &&
-              result.responsePayload.Additional_Info.length != 0;
-          } catch (e) {
-            // Parsing error - unexpectedly
-            return " warning";
-          }
-        }
-
-        return `${isOmitted ? " omitted" : ""}${
-          isFailedResponse ? " failed" : ""
-        }${shouldBeWarning ? " warning" : ""}`;
+        if (isOmitted) return " omitted";
+        if (isFailedResponse) return " failed";
+        if (hasAdditionalInfo(result)) return " warning";
+        return " success";
       }
 
       function generateReport(result) {

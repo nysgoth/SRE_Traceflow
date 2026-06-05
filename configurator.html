@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurator - SRE TraceFlow</title>
+  <link rel="stylesheet" href="assets/css/common.css">
+  <link rel="stylesheet" href="assets/css/tools.css">
+  <style>
+    .desc-content { max-width: 900px; margin: 12px auto 0; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .35s ease, opacity .35s ease; }
+    .desc-content.open { max-height: 200px; opacity: 1; }
+    .hero { text-align: center; }
+    body.configurator .container { max-width: 1200px; margin: 0 auto; }
+    body.configurator .input-section { margin-bottom: 28px; }
+    body.configurator .input-wrapper label { margin-bottom: 12px; }
+    .config-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .config-actions button,
+    .config-actions label.config-file-btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .config-actions button:hover,
+    .config-actions label.config-file-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      transform: translateY(-1px);
+    }
+    .config-actions .save-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+    }
+    .config-actions .save-btn:hover {
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+    }
+    .config-file-btn input { display: none; }
+    .config-status {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+    }
+    .config-status.show { display: block; }
+    .config-status.success {
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid rgba(76, 175, 80, 0.35);
+      color: #b9f6ca;
+    }
+    .config-status.error {
+      background: rgba(220, 53, 69, 0.15);
+      border: 1px solid rgba(220, 53, 69, 0.35);
+      color: #ffcdd2;
+    }
+    .field-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+    .config-entries-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .config-entry-group {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.12);
+    }
+    .config-entry-group-header {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .config-entry-group-header.database {
+      color: #dce3ff;
+      background: rgba(102, 126, 234, 0.18);
+    }
+    .config-entry-group-header.deployment {
+      color: #c8e6c9;
+      background: rgba(76, 175, 80, 0.12);
+    }
+    .config-entry-group-header.service {
+      color: #ffe0b2;
+      background: rgba(255, 167, 38, 0.14);
+    }
+    .config-entry-group-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      padding: 4px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .config-entry-group-body.database-group,
+    .config-entry-group-body.service-group {
+      max-height: none;
+    }
+    .config-entry-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 24px;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .config-entry-row:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .config-entry-row.is-default {
+      background: rgba(102, 126, 234, 0.1);
+    }
+    .config-entry-default {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      cursor: pointer;
+    }
+    .config-entry-default input {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: #667eea;
+      cursor: pointer;
+    }
+    .config-entry-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .config-entry-name {
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: rgba(255, 255, 255, 0.92);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .config-entry-default-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #dce3ff;
+      background: rgba(102, 126, 234, 0.25);
+      border: 1px solid rgba(102, 126, 234, 0.45);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .config-entry-type {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .config-entry-type.database {
+      color: #dce3ff;
+      background: rgba(102, 126, 234, 0.3);
+      border: 1px solid rgba(102, 126, 234, 0.45);
+    }
+    .config-entry-type.deployment {
+      color: #c8e6c9;
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid rgba(76, 175, 80, 0.4);
+    }
+    .config-entry-remove {
+      border: none;
+      background: none;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+    .config-entry-remove:hover {
+      color: #ff8a8a;
+    }
+    .config-entries-empty {
+      padding: 12px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+    }
+    .add-entry-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .add-entry-row input,
+    .add-entry-row select {
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+    }
+    .add-entry-row input {
+      flex: 1;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    .add-entry-row select {
+      min-width: 140px;
+    }
+    .add-entry-row select option {
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .add-entry-row button {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(102, 126, 234, 0.5);
+      background: rgba(102, 126, 234, 0.25);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .add-entry-row button:hover {
+      background: rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body class="configurator">
+  <div id="navbar-container"></div>
+
+  <div class="main-content">
+    <div class="hero">
+      <div class="hero-header">
+        <h1><img src="assets/icons/settings_white.svg" alt="" style="width:32px;height:32px;margin-right:8px;vertical-align:middle;">Configurator</h1>
+        <button class="desc-toggle" type="button" onclick="toggleDesc()" title="Hide description">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="pageDesc" class="desc-content open" aria-hidden="false">
+        <p>Manage databases and deployments in one list. Each entry has a type label and you pick the default per type for KQL queries across the app.</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="input-section">
+        <div class="input-wrapper">
+          <label>Configuration Entries</label>
+          <div id="configEntriesList" class="config-entries-list"></div>
+          <div class="add-entry-row">
+            <input type="text" id="newEntryName" placeholder="e.g., BB_prod_CL or core-integration-service">
+            <select id="newEntryType"></select>
+            <button type="button" id="addEntryBtn">Add</button>
+          </div>
+          <div class="field-hint">Use the radio to set the default per type. Database → KQL table name. Deployment &amp; Service → container/service targets in query tools (browse list &amp; defaults).</div>
+        </div>
+      </div>
+
+      <div class="config-actions">
+        <button type="button" class="save-btn" id="saveConfigBtn">
+          <img src="assets/icons/check_white.svg" alt="" width="14" height="14"> Save Configuration
+        </button>
+        <button type="button" id="exportConfigBtn">
+          <img src="assets/icons/download_white.svg" alt="" width="14" height="14"> Export JSON
+        </button>
+        <label class="config-file-btn" for="importConfigFile">
+          <img src="assets/icons/download_white.svg" alt="" width="14" height="14" style="transform: rotate(180deg);"> Import JSON
+          <input type="file" id="importConfigFile" accept=".json,application/json">
+        </label>
+        <button type="button" id="resetConfigBtn">
+          <img src="assets/icons/sync_white.svg" alt="" width="14" height="14"> Reset to Defaults
+        </button>
+      </div>
+
+      <div id="configStatus" class="config-status"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 SRE TraceFlow. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/navbar.js"></script>
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script>
+    function toggleDesc() {
+      const el = document.getElementById('pageDesc');
+      const isOpen = el.classList.contains('open');
+      el.classList.toggle('open', !isOpen);
+      el.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+    }
+
+    function showStatus(message, type) {
+      const el = document.getElementById('configStatus');
+      el.textContent = message;
+      el.className = `config-status show ${type}`;
+    }
+
+    let entriesState = [];
+
+    function entryKey(entry) {
+      return `${entry.type}:${entry.name}`;
+    }
+
+    function createEntryRow(entry) {
+      const row = document.createElement('div');
+      row.className = 'config-entry-row' + (entry.isDefault ? ' is-default' : '');
+
+      const defaultLabel = document.createElement('label');
+      defaultLabel.className = 'config-entry-default';
+      defaultLabel.title = `Set as default ${entry.type}`;
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `default-${entry.type}`;
+      radio.checked = entry.isDefault;
+      radio.addEventListener('change', () => {
+        entriesState.forEach((item) => {
+          if (item.type === entry.type) {
+            item.isDefault = item.name === entry.name;
+          }
+        });
+        renderEntries();
+      });
+      defaultLabel.appendChild(radio);
+
+      const nameWrap = document.createElement('div');
+      nameWrap.className = 'config-entry-name-wrap';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'config-entry-name';
+      nameSpan.textContent = entry.name;
+      nameSpan.title = entry.name;
+      nameWrap.appendChild(nameSpan);
+
+      if (entry.isDefault) {
+        const defaultTag = document.createElement('span');
+        defaultTag.className = 'config-entry-default-tag';
+        defaultTag.textContent = '[default]';
+        defaultTag.title = `Default ${entry.type}`;
+        nameWrap.appendChild(defaultTag);
+      }
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'config-entry-remove';
+      removeBtn.textContent = '×';
+      removeBtn.title = 'Remove';
+      removeBtn.addEventListener('click', () => {
+        const key = entryKey(entry);
+        entriesState = entriesState.filter((item) => entryKey(item) !== key);
+        const sameType = entriesState.filter((item) => item.type === entry.type);
+        if (sameType.length && !sameType.some((item) => item.isDefault)) {
+          sameType[0].isDefault = true;
+        }
+        renderEntries();
+      });
+
+      row.appendChild(defaultLabel);
+      row.appendChild(nameWrap);
+      row.appendChild(removeBtn);
+      return row;
+    }
+
+    function renderEntries() {
+      const list = document.getElementById('configEntriesList');
+      list.innerHTML = '';
+
+      if (!entriesState.length) {
+        list.innerHTML = '<div class="config-entries-empty">No entries yet.</div>';
+        return;
+      }
+
+      TraceFlowConfig.ENTRY_TYPES.forEach((type) => {
+        const groupEntries = entriesState
+          .filter((entry) => entry.type === type)
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (!groupEntries.length) return;
+
+        const group = document.createElement('div');
+        group.className = 'config-entry-group';
+
+        const header = document.createElement('div');
+        header.className = `config-entry-group-header ${type.toLowerCase()}`;
+        header.textContent = `${type} (${groupEntries.length})`;
+
+        const body = document.createElement('div');
+        body.className = `config-entry-group-body ${type.toLowerCase()}-group`;
+        groupEntries.forEach((entry) => body.appendChild(createEntryRow(entry)));
+
+        group.appendChild(header);
+        group.appendChild(body);
+        list.appendChild(group);
+      });
+    }
+
+    function addEntry() {
+      const nameInput = document.getElementById('newEntryName');
+      const typeSelect = document.getElementById('newEntryType');
+      const name = nameInput.value.trim();
+      const type = typeSelect.value;
+      if (!name) return;
+
+      if (entriesState.some((entry) => entry.name === name && entry.type === type)) {
+        showStatus(`"${name}" already exists as ${type}.`, 'error');
+        return;
+      }
+
+      const isFirstOfType = !entriesState.some((entry) => entry.type === type);
+      entriesState.push({ name, type, isDefault: isFirstOfType });
+      nameInput.value = '';
+      renderEntries();
+    }
+
+    function fillForm(config) {
+      entriesState = config.entries.map((entry) => ({ ...entry }));
+      renderEntries();
+    }
+
+    function readForm() {
+      return TraceFlowConfig.normalizeConfig({ entries: entriesState });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const typeSelect = document.getElementById('newEntryType');
+      TraceFlowConfig.ENTRY_TYPES.forEach((type) => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        typeSelect.appendChild(option);
+      });
+
+      const config = await TraceFlowConfig.init();
+      fillForm(config);
+
+      document.getElementById('addEntryBtn').onclick = addEntry;
+      document.getElementById('newEntryName').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          addEntry();
+        }
+      });
+
+      document.getElementById('saveConfigBtn').onclick = () => {
+        const next = readForm();
+        if (!next.entries.length) {
+          showStatus('Add at least one entry.', 'error');
+          return;
+        }
+        TraceFlowConfig.save(next);
+        fillForm(next);
+        const db = TraceFlowConfig.getDatabaseTable();
+        const dep = TraceFlowConfig.getDefaultEntry('Deployment')?.name || '—';
+        const svc = TraceFlowConfig.getDefaultService() || '—';
+        showStatus(`Saved ${next.entries.length} entries. Defaults: Database "${db}", Deployment "${dep}", Service "${svc}".`, 'success');
+      };
+
+      document.getElementById('exportConfigBtn').onclick = () => {
+        TraceFlowConfig.save(readForm());
+        TraceFlowConfig.exportToFile();
+        showStatus('Configuration exported as traceflow-config.json', 'success');
+      };
+
+      document.getElementById('importConfigFile').onchange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const imported = await TraceFlowConfig.importFromFile(file);
+          fillForm(imported);
+          showStatus(`Imported ${imported.entries.length} entries from ${file.name}`, 'success');
+        } catch {
+          showStatus('Invalid configuration file. Expected JSON with an entries array.', 'error');
+        }
+        event.target.value = '';
+      };
+
+      document.getElementById('resetConfigBtn').onclick = async () => {
+        const config = await TraceFlowConfig.resetToDefaults();
+        fillForm(config);
+        showStatus('Configuration reset to defaults from assets/traceflow-config.json', 'success');
+      };
+    });
+  </script>
+</body>
+</html>

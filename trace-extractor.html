@@ -33,6 +33,9 @@
 
     <!-- Step 1: Extract Traces -->
     <div class="container step-container" id="step1">
+      <div class="config-target-bar" id="configTargetBar">
+        <select id="configEntrySelect" class="config-target-select database" title="Database or Service"></select>
+      </div>
       <div class="step-header">
         <div class="step-number">
           <img src="assets/icons/link_white.svg" alt="" width="24" height="24">
@@ -113,60 +116,22 @@
       </div>
     </div>
 
-    <!-- Step 2: Format Traces -->
+    <!-- Step 2: Extract Logs -->
     <div class="container step-container hidden" id="step2">
-      <div class="step-header">
-        <div class="step-number">
-          <img src="assets/icons/copy_white.svg" alt="" width="24" height="24">
-        </div>
-        <div class="step-header-content">
-          <div class="step-title">Format Traces</div>
-          <div class="step-description">Copy and paste the traces from Step 1 directly here (without quotes). This will create a clean comma-separated string for Log Analytics queries.</div>
-        </div>
-      </div>
-      
-      <div class="input-section">
-        <div class="input-wrapper">
-          <label for="textJoinInput">Trace Values</label>
-          <textarea id="textJoinInput" rows="8" placeholder="Copy the traces extracted from Azure Log Analytics...&#10;&#10;Example:&#10;a1b2c3d4e5f6&#10;x9y8z7w6v5u4&#10;m3n2o1p0q9r8"></textarea>
-        </div>
-      </div>
-      
-      <div class="action-section">
-        <button onclick="formatTextJoin()" class="analyze-btn">
-          <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format Traces
-        </button>
-      </div>
-      
-      <div id="textJoinResult" class="result"></div>
-      
-      <div class="button-group" style="margin-top: 15px;">
-        <button class="copy" onclick="copyTextJoin()"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result</button>
-        <button onclick="goToStep(1)" class="back-btn">
-          <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14"> Back
-        </button>
-        <button onclick="goToStep(3)" class="analyze-btn" id="nextToStep3" style="display:none;">
-          <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14" style="transform: rotate(180deg);"> Next Step
-        </button>
-      </div>
-    </div>
-
-    <!-- Step 3: Extract Logs -->
-    <div class="container step-container hidden" id="step3">
       <div class="step-header">
         <div class="step-number">
           <img src="assets/icons/map_white.svg" alt="" width="24" height="24">
         </div>
         <div class="step-header-content">
           <div class="step-title">Extract Logs</div>
-          <div class="step-description">Copy and paste the formatted traces from Step 2 here (already pre-formatted with quotes and commas). This will generate a complete KQL query for Azure Log Analytics to extract logs for those specific trace IDs.</div>
+          <div class="step-description">Paste the trace IDs from Step 1 here (one per line, without quotes). This will generate a complete KQL query for Azure Log Analytics to extract logs for those trace IDs.</div>
         </div>
       </div>
       
       <div class="input-section">
         <div class="input-wrapper">
-          <label for="vals2">Formatted Traces</label>
-          <textarea id="vals2" rows="2" placeholder='Example:&#10;"abc123def456", "xyz789uvw012", "mno345pqr678"'></textarea>
+          <label for="vals2">Trace Values</label>
+          <textarea id="vals2" rows="8" placeholder="Paste the traces extracted from Azure Log Analytics...&#10;&#10;Example:&#10;a1b2c3d4e5f6&#10;x9y8z7w6v5u4&#10;m3n2o1p0q9r8"></textarea>
         </div>
       </div>
       
@@ -180,17 +145,17 @@
       
       <div class="button-group" style="margin-top: 15px;">
         <button class="copy" id="cpy2"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result</button>
-        <button onclick="goToStep(2)" class="back-btn">
+        <button onclick="goToStep(1)" class="back-btn">
           <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14"> Back
         </button>
-        <button onclick="goToStep(4)" class="analyze-btn" id="nextToStep4" style="display:none;">
+        <button onclick="goToStep(3)" class="analyze-btn" id="nextToStep3" style="display:none;">
           <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14" style="transform: rotate(180deg);"> Next Step
         </button>
       </div>
     </div>
 
-    <!-- Step 4: Analyze Logs -->
-    <div class="container step-container hidden" id="step4">
+    <!-- Step 3: Analyze Logs -->
+    <div class="container step-container hidden" id="step3">
       <div class="step-header">
         <div class="step-number">
           <img src="assets/icons/chart-line_white.svg" alt="" width="24" height="24">
@@ -208,13 +173,14 @@
       </div>
       
       <div class="button-group" style="margin-top: 15px;">
-        <button onclick="goToStep(3)" class="back-btn">
+        <button onclick="goToStep(2)" class="back-btn">
           <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14"> Back
         </button>
       </div>
     </div>
   </div>
 
+  <script src="assets/js/config.js"></script>
   <script>
     function toggleDesc(){
       const el = document.getElementById('pageDesc');
@@ -230,113 +196,41 @@
     
     // Step navigation
     function goToStep(stepNumber) {
-      // Hide all steps
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 3; i++) {
         const step = document.getElementById(`step${i}`);
         if (step) {
           step.classList.add('hidden');
         }
       }
       
-      // Show the selected step
       const targetStep = document.getElementById(`step${stepNumber}`);
       if (targetStep) {
         targetStep.classList.remove('hidden');
-        // Smooth scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-    
-    // 1) TEXTJOIN
-    function formatTextJoin() {
-      const input = document.getElementById('textJoinInput');
-      const result = document.getElementById('textJoinResult');
-      const raw = input.value.trim();
-      
-      if (!raw) {
-        result.textContent = 'Please enter trace values';
-        result.style.color = '#ff6b6b';
-        return;
-      }
-      
-      const lines = [...new Set(raw.split('\n')
-        .map(l => l.trim())
-        .filter(l => l && l.toLowerCase() !== 'traceid'))];
-      
-      if (lines.length === 0) {
-        result.textContent = 'No valid trace values found';
-        result.style.color = '#ff6b6b';
-        return;
-      }
-      
-      const formatted = lines.map(l => `"${l}"`).join(', ');
-      result.textContent = formatted;
-      result.style.color = '#ffffff';
-      
-      // Show next button
-      document.getElementById('nextToStep3').style.display = 'inline-flex';
-      
-      // Show success animation
-      result.style.transform = 'scale(1.02)';
-      setTimeout(() => result.style.transform = 'scale(1)', 200);
+
+    let selectedEntry = { name: '', type: 'Database' };
+
+    function getQueryTable() {
+      return TraceFlowConfig.getQueryTableForEntry(selectedEntry);
     }
-    
-    function copyTextJoin() {
-      const t = document.getElementById('textJoinResult').textContent;
-      if (t && !t.includes('Please enter') && !t.includes('No valid')) {
-          const button = event.target.closest('button');
-        
-        const showSuccess = () => {
-          const originalText = button.innerHTML;
-          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-          button.style.background = '#2a2a2a';
-          button.style.color = '#ffffff';
-          setTimeout(() => {
-            button.innerHTML = originalText;
-            button.style.background = '';
-            button.style.color = '';
-          }, 2000);
-        };
-        
-        const fallbackCopy = () => {
-          const textArea = document.createElement('textarea');
-          textArea.value = t;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            if (successful) {
-              showSuccess();
-              return true;
-            }
-            return false;
-          } catch (err) {
-            document.body.removeChild(textArea);
-            return false;
-          }
-        };
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(t).then(() => {
-            showSuccess();
-        }).catch(() => {
-            if (!fallbackCopy()) {
-          alert('Failed to copy to clipboard');
-            }
-        });
-        } else {
-          if (!fallbackCopy()) {
-            alert('Failed to copy to clipboard');
-          }
-        }
-      }
+
+    function getContainerFilter() {
+      return TraceFlowConfig.getContainerFilterForEntry(selectedEntry);
+    }
+
+    function initConfigTargetBar() {
+      const select = document.getElementById('configEntrySelect');
+      selectedEntry = TraceFlowConfig.initConfigEntrySelect(select, {
+        onChange: (entry) => { selectedEntry = entry; },
+      }) || selectedEntry;
     }
 
     // Global time range management
-    document.addEventListener('DOMContentLoaded',()=>{
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      await TraceFlowConfig.init();
+      initConfigTargetBar();
       const now=new Date(), tenAgo=new Date(now-10*60000);
       const toI=dt=>{
         const p=n=>n.toString().padStart(2,'0');
@@ -369,10 +263,9 @@
       document.getElementById('cpy1').onclick=()=>copyOut(1);
       document.getElementById('gen2').onclick=()=>{
         generate(2,true);
-        // Show next button after successful generation
         const out2 = document.getElementById('out2');
-        if (out2 && out2.textContent && !out2.textContent.includes('Please fill')) {
-          document.getElementById('nextToStep4').style.display = 'inline-flex';
+        if (out2 && out2.textContent && !out2.textContent.includes('Please fill') && !out2.textContent.includes('No valid')) {
+          document.getElementById('nextToStep3').style.display = 'inline-flex';
         }
       };
       document.getElementById('cpy2').onclick=()=>copyOut(2);
@@ -496,12 +389,25 @@
       }
       const sUTC=new Date(s).toISOString(),
             eUTC=new Date(e).toISOString();
-        const list=[...new Set(r.split('\n').map(l=>l.trim()).filter(l=>l))]
-                   .join(', ');
 
-      let q=`BB_prod_CL
+      let list;
+      if (extended) {
+        const lines = [...new Set(r.split('\n')
+          .map(l => l.trim())
+          .filter(l => l && l.toLowerCase() !== 'traceid'))];
+        if (lines.length === 0) {
+          out.textContent = 'No valid trace values found';
+          out.style.color = '#ff6b6b';
+          return;
+        }
+        list = lines.map(l => `"${l}"`).join(', ');
+      } else {
+        list = [...new Set(r.split('\n').map(l=>l.trim()).filter(l=>l))].join(', ');
+      }
+
+      let q=`${getQueryTable()}
 | where time_t between (datetime('${sUTC}') .. datetime('${eUTC}'))
-| where log has_any (${list})
+| where log has_any (${list})${getContainerFilter()}
 | extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log)
 | extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log)`;
       q+= extended

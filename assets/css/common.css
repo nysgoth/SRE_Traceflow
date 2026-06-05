@@ -80,8 +80,11 @@ body:not(.home-page)::before {
   box-shadow: -4px 0 32px rgba(0, 0, 0, 0.5);
   z-index: 999;
   transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow-y: auto;
+  overflow: hidden;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .utilities-sidebar.open {
@@ -127,6 +130,44 @@ body:not(.home-page)::before {
 .utilities-sidebar-close:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
+}
+
+.utilities-sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.utilities-sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.utility-config-link {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.utility-config-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.utility-config-link.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.35), rgba(118, 75, 162, 0.25));
+  border-color: rgba(102, 126, 234, 0.6);
 }
 
 .utilities-list {
@@ -293,6 +334,46 @@ body:not(.home-page)::before {
 .utilities-modal-content .action-section .analyze-btn {
   width: 100%;
   box-sizing: border-box;
+}
+
+.action-section.comma-formatter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.action-section.comma-formatter-actions .analyze-btn {
+  width: auto;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.comma-delimiter-label {
+  font-size: 13px;
+  margin: 0;
+  white-space: nowrap;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.comma-delimiter-select {
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.utilities-modal-content .action-section.comma-formatter-actions .analyze-btn {
+  width: auto;
 }
 
 .utilities-modal-content .result {
