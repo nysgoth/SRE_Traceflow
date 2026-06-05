@@ -446,13 +446,13 @@
       const endUTC = new Date(endTime).toISOString();
       
       // Build the time_range query conditionally
-      let timeRangeQuery = `let time_range = prod_CL
-| where kubernetes_container_name_s has container_name
+      let timeRangeQuery = `let time_range = BB_prod_CL
+| where container_name has container_name
 | where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))`;
       
       // Only add has_any line if searchValue has data
       if (searchValue) {
-        timeRangeQuery += `\n| where log_s has_any (${searchValue})`;
+        timeRangeQuery += `\n| where log has_any (${searchValue})`;
       }
       
       timeRangeQuery += `\n| summarize min_timestamp = min(time_t), max_timestamp = max(time_t);`;
@@ -461,10 +461,10 @@
 ${timeRangeQuery}
 let min_time = toscalar(time_range | project min_timestamp) - ${timeOffset}ms;
 let max_time = toscalar(time_range | project max_timestamp) + ${timeOffset}ms;
-prod_CL
+BB_prod_CL
 | where time_t between (min_time .. max_time)
-| where kubernetes_container_name_s has container_name
-| project time_t, log_s
+| where container_name has container_name
+| project time_t, log
 | order by time_t asc`;
       
       showSuccess(result, query);

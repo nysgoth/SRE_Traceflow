@@ -283,12 +283,12 @@
       const sUTC = new Date(s).toISOString();
       const eUTC = new Date(e).toISOString();
 
-      const q = `prod_CL
+      const q = `BB_prod_CL
 | where time_t between (datetime('${sUTC}') .. datetime('${eUTC}'))
-| where log_s has_any (${traces})
-| extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log_s)
-| extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log_s)
-| project TraceID, kubernetes_container_name_s, log_s, time_t, Fail_Status_Description
+| where log has_any (${traces})
+| extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log)
+| extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log)
+| project TraceID, container_name, log, time_t, Fail_Status_Description
 | order by time_t desc`;
       
       out.textContent = q;

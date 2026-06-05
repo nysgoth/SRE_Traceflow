@@ -499,13 +499,13 @@
         const list=[...new Set(r.split('\n').map(l=>l.trim()).filter(l=>l))]
                    .join(', ');
 
-      let q=`prod_CL
+      let q=`BB_prod_CL
 | where time_t between (datetime('${sUTC}') .. datetime('${eUTC}'))
-| where log_s has_any (${list})
-| extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log_s)
-| extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log_s)`;
+| where log has_any (${list})
+| extend TraceID = extract(@"\\[.*?,([a-zA-Z0-9]+),.*?\\]", 1, log)
+| extend Fail_Status_Description = extract('"Fail_Status_Description":"([^"]+)"', 1, log)`;
       q+= extended
-        ? `\n| project TraceID, kubernetes_container_name_s, log_s, time_t, Fail_Status_Description\n| order by time_t desc`
+        ? `\n| project TraceID, container_name, log, time_t, Fail_Status_Description\n| order by time_t asc`
         : `\n| project TraceID`;
       out.textContent=q;
       out.style.color='#ffffff';

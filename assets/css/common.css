@@ -50,11 +50,10 @@ body:not(.home-page)::before {
   justify-content: center !important;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4),
               0 0 12px rgba(118, 75, 162, 0.3) !important;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  will-change: transform;
 }
 
 .utilities-panel-toggle:hover {
@@ -71,7 +70,7 @@ body:not(.home-page)::before {
 
 .utilities-sidebar {
   position: fixed;
-  right: 0;
+  right: -400px;
   top: 0;
   width: 380px;
   height: 100vh;
@@ -80,15 +79,13 @@ body:not(.home-page)::before {
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: -4px 0 32px rgba(0, 0, 0, 0.5);
   z-index: 999;
-  transform: translateX(100%);
-  will-change: transform;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
   padding: 20px;
 }
 
 .utilities-sidebar.open {
-  transform: translateX(0);
+  right: 0;
 }
 
 .utilities-sidebar-header {
@@ -144,11 +141,10 @@ body:not(.home-page)::before {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 12px;
-  will-change: transform;
 }
 
 .utility-item:hover {
@@ -318,12 +314,6 @@ body:not(.home-page)::before {
   box-sizing: border-box;
 }
 
-/* Override for JSON formatter buttons - allow side-by-side layout */
-.utilities-modal-content .button-group button[style*="width: auto"] {
-  width: auto !important;
-  flex: 0 0 auto !important;
-}
-
 /* Ensure modal buttons match utilities page styling */
 .utilities-modal-content .analyze-btn,
 .utilities-modal-content .button-group .analyze-btn {
@@ -338,10 +328,6 @@ body:not(.home-page)::before {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4),
               0 0 20px rgba(118, 75, 162, 0.3);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
 }
 
 .utilities-modal-content .analyze-btn:hover,
@@ -356,23 +342,12 @@ body:not(.home-page)::before {
   background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: #ffffff;
-  border-radius: 14px;
-  padding: 13px 22px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
 }
 
 .utilities-modal-content .button-group button.copy:hover {
   background: rgba(255, 255, 255, 0.15) !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Navigation Styles */

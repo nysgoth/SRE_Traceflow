@@ -102,17 +102,17 @@
       const endUTC = new Date(endTime).toISOString();
       
       const query = `let container_name = "${containerName}";
-let time_range = prod_CL
-| where kubernetes_container_name_s has container_name
+let time_range = BB_prod_CL
+| where container_name has container_name
 | where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))
-| where log_s contains "${searchValue}"
+| where log contains "${searchValue}"
 | summarize min_timestamp = min(time_t), max_timestamp = max(time_t);
 let min_time = toscalar(time_range | project min_timestamp) - 1ms;
 let max_time = toscalar(time_range | project max_timestamp) + 1ms;
-prod_CL
+BB_prod_CL
 | where time_t between (min_time .. max_time)
-| where kubernetes_container_name_s has container_name
-| project time_t, log_s
+| where container_name has container_name
+| project time_t, log
 | order by time_t asc`;
       
       showSuccess(result, query);

@@ -241,8 +241,6 @@
       let errorCount = 0;
       let warnCount = 0;
       let debugCount = 0;
-      let requestCount = 0;
-      let responseCount = 0;
       
       lines.forEach((line, index) => {
         const lowerLine = line.toLowerCase();
@@ -271,42 +269,6 @@
           if (cssClass === 'error') errorCount++;
           else if (cssClass === 'warn') warnCount++;
           else if (cssClass === 'debug') debugCount++;
-          
-          // Count requests and responses - use strict patterns to avoid false positives
-          const lowerLineForDetection = line.toLowerCase();
-          
-          // Check for interceptor log format (contains both requestUrl and responseStatus)
-          const hasRequestUrl = /requesturl\s*[=\[]/.test(lowerLineForDetection);
-          const hasResponseStatus = /responsestatus\s*[=\[]/.test(lowerLineForDetection);
-          
-          if (hasRequestUrl && hasResponseStatus) {
-            // Interceptor log format - contains both request and response in one line
-            // Count as one request-response pair
-            requestCount++;
-            responseCount++;
-          } else if (hasRequestUrl) {
-            // Only request info present
-            requestCount++;
-          } else if (hasResponseStatus) {
-            // Only response info present
-            responseCount++;
-          } else {
-            // Check for other HTTP log formats
-            // Request: HTTP method followed by URL path
-            const httpRequestPattern = /\b(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+\/[^\s]*/i.test(line);
-            // Response: HTTP version followed by status code
-            const httpResponsePattern = /HTTP\/\d\.\d\s+(200|201|202|204|300|301|302|304|400|401|403|404|405|408|409|500|502|503|504)\b/.test(line);
-            
-            if (httpRequestPattern && !httpResponsePattern) {
-              requestCount++;
-            } else if (httpResponsePattern && !httpRequestPattern) {
-              responseCount++;
-            } else if (httpRequestPattern && httpResponsePattern) {
-              // HTTP log line with both request and response
-              requestCount++;
-              responseCount++;
-            }
-          }
         }
       });
       
@@ -321,7 +283,7 @@
       document.getElementById('resultsContent').innerHTML = htmlOutput;
       
       // Update stats
-      updateResultsStats(matchCount, errorCount, warnCount, debugCount, requestCount, responseCount);
+      updateResultsStats(matchCount, errorCount, warnCount, debugCount);
       
       // Show success animation
       const resultsContentDiv = document.getElementById('resultsContent');
@@ -426,7 +388,7 @@
       }, 1000);
     }
     
-    function updateResultsStats(total, errors, warnings, debugs, requests, responses) {
+    function updateResultsStats(total, errors, warnings, debugs) {
       const statsDiv = document.getElementById('resultsStats');
       statsDiv.innerHTML = `
         <div class="stat-item">
@@ -444,14 +406,6 @@
         <div class="stat-item debug">
           <div class="stat-number">${debugs}</div>
           <div class="stat-label">Debug</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">${requests}</div>
-          <div class="stat-label">Requests</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">${responses}</div>
-          <div class="stat-label">Responses</div>
         </div>
       `;
     }
@@ -496,7 +450,7 @@
       // Show success feedback
       const button = event.target.closest('button');
       const originalText = button.innerHTML;
-      button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14"> Downloaded!';
+      button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Downloaded!';
       button.style.background = '#2a2a2a';
       button.style.color = '#ffffff';
       setTimeout(() => {
