@@ -167,11 +167,7 @@
   }
 
   function getDefaultContainer() {
-    return (
-      getDefaultEntry('Deployment')?.name ||
-      getDefaultService() ||
-      'core-integration-service'
-    );
+    return getDefaultEntry('Deployment')?.name || 'core-integration-service';
   }
 
   function getDeployments() {
@@ -183,9 +179,7 @@
   }
 
   function getQueryTargets() {
-    return Array.from(new Set([...getDeployments(), ...getServices()])).sort((a, b) =>
-      a.localeCompare(b)
-    );
+    return getDeployments().slice().sort((a, b) => a.localeCompare(b));
   }
 
   function save(config) {
@@ -200,8 +194,9 @@
     return init();
   }
 
-  function exportToFile() {
-    const blob = new Blob([JSON.stringify(getConfig(), null, 2) + '\n'], {
+  function exportToFile(config) {
+    const data = normalizeConfig(config || getConfig());
+    const blob = new Blob([JSON.stringify(data, null, 2) + '\n'], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
@@ -210,15 +205,21 @@
     link.download = 'traceflow-config.json';
     link.click();
     URL.revokeObjectURL(url);
+    return data;
   }
 
-  function importFromFile(file) {
+  function saveAndExport(config) {
+    const saved = save(config);
+    exportToFile(saved);
+    return saved;
+  }
+
+  function parseConfigFile(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const parsed = JSON.parse(reader.result);
-          resolve(save(parsed));
+          resolve(normalizeConfig(JSON.parse(reader.result)));
         } catch (err) {
           reject(err);
         }
@@ -226,6 +227,10 @@
       reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
       reader.readAsText(file);
     });
+  }
+
+  function importFromFile(file) {
+    return parseConfigFile(file);
   }
 
   const CONFIG_SELECTOR_TYPES = ['Database', 'Service'];
@@ -243,22 +248,160 @@
 
   function syncConfigSelectStyle(selectEl, type) {
     if (!selectEl) return;
-    selectEl.classList.remove('database', 'service');
-    selectEl.classList.add((type || 'Database').toLowerCase());
+    const typeClass = (type || 'Database').toLowerCase();
+    selectEl.classList.remove('database', 'deployment', 'service');
+    selectEl.classList.add(typeClass);
+    const wrapper = selectEl.closest('.config-target-dropdown');
+    if (wrapper) {
+      wrapper.classList.remove('database', 'deployment', 'service');
+      wrapper.classList.add(typeClass);
+    }
+  }
+
+  function closeConfigDropdown(wrapper) {
+    if (!wrapper) return;
+    const menu = wrapper.querySelector('.config-target-menu');
+    const trigger = wrapper.querySelector('.config-target-trigger');
+    if (menu) menu.hidden = true;
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    wrapper.classList.remove('open');
+  }
+
+  function closeAllConfigDropdowns() {
+    document.querySelectorAll('.config-target-dropdown.open').forEach(closeConfigDropdown);
+  }
+
+  function updateConfigDropdownUI(selectEl) {
+    const wrapper = selectEl?.closest('.config-target-dropdown');
+    if (!wrapper) return;
+    const option = selectEl.selectedOptions[0];
+    const trigger = wrapper.querySelector('.config-target-trigger');
+    const [type] = (option?.value || '').split(':');
+
+    if (trigger) {
+      trigger.textContent = option?.textContent || 'Select target';
+      trigger.title = option?.textContent || 'Query target';
+    }
+
+    syncConfigSelectStyle(selectEl, type);
+
+    wrapper.querySelectorAll('.config-target-option').forEach((btn) => {
+      btn.classList.toggle('selected', btn.dataset.value === selectEl.value);
+    });
+  }
+
+  function buildConfigDropdownMenu(selectEl) {
+    const wrapper = selectEl.closest('.config-target-dropdown');
+    if (!wrapper) return;
+    const menu = wrapper.querySelector('.config-target-menu');
+    if (!menu) return;
+
+    menu.innerHTML = '';
+    selectEl.querySelectorAll('optgroup').forEach((group) => {
+      const groupEl = document.createElement('div');
+      groupEl.className = 'config-target-group';
+
+      const label = document.createElement('div');
+      label.className = 'config-target-group-label';
+      label.textContent = group.label;
+      groupEl.appendChild(label);
+
+      group.querySelectorAll('option').forEach((opt) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'config-target-option';
+        item.dataset.value = opt.value;
+        item.textContent = opt.textContent;
+        const [type] = opt.value.split(':');
+        item.classList.add(type.toLowerCase());
+        if (opt.selected) item.classList.add('selected');
+        item.addEventListener('click', (event) => {
+          event.stopPropagation();
+          selectEl.value = opt.value;
+          updateConfigDropdownUI(selectEl);
+          closeConfigDropdown(wrapper);
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        groupEl.appendChild(item);
+      });
+
+      menu.appendChild(groupEl);
+    });
+  }
+
+  function wrapConfigEntrySelect(selectEl) {
+    if (!selectEl) return;
+    if (selectEl.dataset.customDropdown === 'true') {
+      buildConfigDropdownMenu(selectEl);
+      updateConfigDropdownUI(selectEl);
+      return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'config-target-dropdown';
+    selectEl.parentNode.insertBefore(wrapper, selectEl);
+    wrapper.appendChild(selectEl);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'config-target-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.title = selectEl.title || 'Query target';
+
+    const menu = document.createElement('div');
+    menu.className = 'config-target-menu';
+    menu.setAttribute('role', 'listbox');
+    menu.hidden = true;
+
+    trigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const willOpen = menu.hidden;
+      closeAllConfigDropdowns();
+      if (willOpen) {
+        menu.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+        wrapper.classList.add('open');
+      }
+    });
+
+    menu.addEventListener('click', (event) => event.stopPropagation());
+
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(menu);
+    selectEl.dataset.customDropdown = 'true';
+
+    if (!window.__traceflowConfigDropdownListeners) {
+      document.addEventListener('click', closeAllConfigDropdowns);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeAllConfigDropdowns();
+      });
+      window.__traceflowConfigDropdownListeners = true;
+    }
+
+    buildConfigDropdownMenu(selectEl);
+    updateConfigDropdownUI(selectEl);
   }
 
   function getQueryTableForEntry(entry) {
-    if (entry?.type === 'Database') {
+    if (entry?.type === 'Database' || entry?.type === 'Service') {
       return entry.name || getDatabaseTable();
     }
     return getDatabaseTable();
   }
 
   function getContainerFilterForEntry(entry) {
-    if (entry?.type === 'Service') {
+    if (entry?.type === 'Deployment' && entry.name) {
       return `\n| where container_name has "${entry.name}"`;
     }
     return '';
+  }
+
+  function applyEntryToContainerInput(entry, containerInput) {
+    if (!containerInput || !entry?.name) return;
+    if (entry.type === 'Deployment') {
+      containerInput.value = entry.name;
+    }
   }
 
   function initConfigEntrySelect(selectEl, options = {}) {
@@ -294,9 +437,11 @@
       selectEl.selectedIndex = 0;
     }
 
+    wrapConfigEntrySelect(selectEl);
+
     const sync = () => {
+      updateConfigDropdownUI(selectEl);
       const entry = getSelectedConfigEntry(selectEl);
-      syncConfigSelectStyle(selectEl, entry.type);
       onChange(entry);
       return entry;
     };
@@ -325,10 +470,13 @@
     syncConfigSelectStyle,
     getQueryTableForEntry,
     getContainerFilterForEntry,
+    applyEntryToContainerInput,
     initConfigEntrySelect,
     save,
+    saveAndExport,
     resetToDefaults,
     exportToFile,
+    parseConfigFile,
     importFromFile,
     normalizeConfig,
   };

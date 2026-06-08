@@ -21,30 +21,7 @@
       max-height: 200px; /* enough to show one short paragraph */
       opacity: 1;
     }
-    /* Deployment browse dropdown */
-    .deploy-wrap { position: relative; display: flex; gap: 6px; align-items: center; }
     .deploy-hint { color: rgba(255,255,255,.7); font-size: 12px; margin-top: 4px; }
-    .deploy-btn { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; cursor: pointer; }
-    .deploy-btn:hover { background: rgba(255,255,255,.15); }
-    /* Dropdown positioned near center for better visibility */
-    .deploy-dropdown {
-      position: fixed;
-      top: 20vh;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.92);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 10px;
-      box-shadow: 0 18px 40px rgba(0,0,0,.5);
-      width: min(90vw, 520px);
-      max-height: 60vh;
-      overflow: auto;
-      display: none;
-      z-index: 2000;
-    }
-    .deploy-dropdown.open { display: block; }
-    .deploy-item { padding: 8px 12px; color: #fff; cursor: pointer; }
-    .deploy-item:hover { background: rgba(255,255,255,.1); }
   </style>
   <script src="assets/js/navbar.js"></script>
 </head>
@@ -66,17 +43,18 @@
     </div>
   </div>
 
-  <div class="wrapper" style="display:flex;justify-content:center;width:100%;">
+  <div class="wrapper query-tool-wrapper">
+    <div class="config-target-bar" id="configTargetBar">
+      <select id="configEntrySelect" class="config-target-select database" title="Query target"></select>
+    </div>
     <!-- Extended Search Container -->
-    <div class="container" style="max-width:1200px;width:100%;margin:0 auto;padding:2.5% 2.5%;">
-      <div class="config-target-bar" id="configTargetBar">
-        <select id="configEntrySelect" class="config-target-select database" title="Database or Service"></select>
-      </div>
+    <div class="container">
       <!-- Global Time Range Selector -->
       <div class="global-time-range">
         <div class="time-range-header">
           <div class="time-range-icon">
-            <img src="assets/icons/clock_white.svg" alt="" width="24" height="24">
+            <img src="assets/icons/clock_white.svg" alt="" width="20" height="20">
+            <div class="time-duration-display" id="timeDuration">24h</div>
           </div>
           <div class="time-range-header-content">
             <div class="time-range-title-row">
@@ -92,7 +70,6 @@
                 <button class="time-preset-btn" data-value="7d">7d</button>
                 <button class="time-preset-btn" data-value="30d">30d</button>
                 <button class="time-preset-btn" data-value="custom">Custom</button>
-                <div class="time-duration-display" id="timeDuration">24h</div>
               </div>
               <select id="timePreset" onchange="applyTimePreset()" class="time-preset-select" style="display:none;">
                 <option value="5m">Last 5 minutes</option>
@@ -120,15 +97,19 @@
       </div>
       <label for="containerName">Container Name:</label>
       <div class="deploy-wrap">
-        <input list="deploymentList" id="containerName" placeholder="e.g., core-integration-service" value="core-integration-service" style="flex:1;">
-        <button type="button" id="browseDeployments" class="deploy-btn">Browse</button>
-        <datalist id="deploymentList"></datalist>
-        <div id="deploymentDropdown" class="deploy-dropdown" aria-hidden="true"></div>
+        <div class="deploy-input-wrap">
+          <input type="text" id="containerName" placeholder="e.g., core-integration-service" value="core-integration-service" autocomplete="off" spellcheck="false">
+          <div id="deploymentTypeahead" class="config-target-menu deploy-browse-menu deploy-typeahead-menu" role="listbox" hidden></div>
+        </div>
+        <div class="deploy-browse-dropdown" id="deployBrowseDropdown">
+          <button type="button" id="browseDeployments" class="deploy-browse-trigger" aria-haspopup="listbox" aria-expanded="false">Browse</button>
+          <div id="deploymentDropdown" class="config-target-menu deploy-browse-menu" role="listbox" hidden></div>
+        </div>
       </div>
       <div class="deploy-hint">Start typing to search, or click Browse to pick from list.</div>
       
       <label for="searchValue">Search Value (has_any - pre-formatted):</label>
-      <input type="text" id="searchValue" placeholder='Enter pre-formatted values like: "value1", "value2", "value3"'>
+      <input type="text" id="searchValue" placeholder='Single value needs no quotes; multiple: "value1", "value2"'>
       
       <label for="timeOffset">Time Offset (milliseconds):</label>
       <input type="number" id="timeOffset" placeholder="e.g., 1" value="1" min="0" max="10000">
@@ -157,36 +138,81 @@
       if (containerInput) containerInput.value = TraceFlowConfig.getDefaultContainer();
       const configSelect = document.getElementById('configEntrySelect');
       selectedEntry = TraceFlowConfig.initConfigEntrySelect(configSelect, {
-        onChange: (entry) => {
-          selectedEntry = entry;
-          if (entry.type === 'Service' && containerInput) {
-            containerInput.value = entry.name;
-          }
-        },
+        onChange: (entry) => { selectedEntry = entry; },
       }) || selectedEntry;
-      const dl = document.getElementById('deploymentList');
-      dl.innerHTML = '';
-      DEPLOYMENT_NAMES.forEach(n => {
-        const opt = document.createElement('option'); opt.value = n; dl.appendChild(opt);
+      renderDeploymentMenus(getFilteredDeployments(''));
+    }
+
+    function getFilteredDeployments(query) {
+      const q = (query || '').trim().toLowerCase();
+      if (!q) return DEPLOYMENT_NAMES.slice();
+      return DEPLOYMENT_NAMES.filter((name) => name.toLowerCase().includes(q));
+    }
+
+    function renderDeploymentMenu(menuEl, list, onSelect) {
+      const input = document.getElementById('containerName');
+      const current = input?.value?.trim() || '';
+      menuEl.innerHTML = '';
+
+      list.forEach((name) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'config-target-option deployment';
+        item.dataset.name = name;
+        item.textContent = name;
+        if (name === current) item.classList.add('selected');
+        item.addEventListener('mousedown', (event) => event.preventDefault());
+        item.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (input) input.value = name;
+          onSelect(name);
+        });
+        menuEl.appendChild(item);
       });
-      buildDeploymentDropdown(DEPLOYMENT_NAMES);
     }
 
-    function buildDeploymentDropdown(list){
-      const dd = document.getElementById('deploymentDropdown');
-      dd.innerHTML = list.map(n => `<div class="deploy-item" data-name="${n}">${n}</div>`).join('');
-      dd.querySelectorAll('.deploy-item').forEach(el => el.addEventListener('click', () => {
-        const val = el.getAttribute('data-name');
-        const input = document.getElementById('containerName');
-        input.value = val;
-        toggleDropdown(false);
-      }));
+    function renderDeploymentMenus(list) {
+      const browseMenu = document.getElementById('deploymentDropdown');
+      const typeaheadMenu = document.getElementById('deploymentTypeahead');
+      const onSelect = () => {
+        toggleDeploymentDropdown(false);
+        toggleTypeahead(false);
+        renderDeploymentMenus(getFilteredDeployments(document.getElementById('containerName')?.value || ''));
+      };
+      renderDeploymentMenu(browseMenu, list, onSelect);
+      renderDeploymentMenu(typeaheadMenu, list, onSelect);
     }
 
-    function toggleDropdown(open){
+    function toggleTypeahead(open) {
+      const menu = document.getElementById('deploymentTypeahead');
+      const input = document.getElementById('containerName');
+      if (!menu || !input) return;
+      if (open && document.activeElement === input && menu.childElementCount > 0) {
+        menu.hidden = false;
+      } else {
+        menu.hidden = true;
+      }
+    }
+
+    function toggleDeploymentDropdown(open) {
+      const wrapper = document.getElementById('deployBrowseDropdown');
       const dd = document.getElementById('deploymentDropdown');
-      if(open){ dd.classList.add('open'); dd.setAttribute('aria-hidden','false'); }
-      else { dd.classList.remove('open'); dd.setAttribute('aria-hidden','true'); }
+      const browseBtn = document.getElementById('browseDeployments');
+      if (!wrapper || !dd || !browseBtn) return;
+
+      if (open) {
+        toggleTypeahead(false);
+        document.querySelectorAll('.deploy-browse-dropdown.open').forEach((el) => {
+          if (el !== wrapper) toggleDeploymentDropdown(false);
+        });
+        dd.hidden = false;
+        browseBtn.setAttribute('aria-expanded', 'true');
+        wrapper.classList.add('open');
+      } else {
+        dd.hidden = true;
+        browseBtn.setAttribute('aria-expanded', 'false');
+        wrapper.classList.remove('open');
+      }
     }
 
     function toggleDesc() {
@@ -224,19 +250,34 @@
       const browseBtn = document.getElementById('browseDeployments');
       const dd = document.getElementById('deploymentDropdown');
       const input = document.getElementById('containerName');
-      browseBtn.addEventListener('click', (e)=>{
+      browseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if(dd.classList.contains('open')) toggleDropdown(false); else toggleDropdown(true);
+        renderDeploymentMenus(getFilteredDeployments(input.value));
+        toggleDeploymentDropdown(dd.hidden);
       });
-      document.addEventListener('click', (e)=>{
-        if(!dd.contains(e.target) && e.target !== browseBtn) toggleDropdown(false);
+      dd.addEventListener('click', (e) => e.stopPropagation());
+      document.addEventListener('click', () => toggleDeploymentDropdown(false));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          toggleDeploymentDropdown(false);
+          toggleTypeahead(false);
+        }
       });
-      // filter dropdown items as user types
-      input.addEventListener('input', ()=>{
-        const q = input.value.toLowerCase();
-        const filtered = DEPLOYMENT_NAMES.filter(n => n.toLowerCase().includes(q));
-        buildDeploymentDropdown(filtered);
+      input.addEventListener('input', () => {
+        const filtered = getFilteredDeployments(input.value);
+        renderDeploymentMenus(filtered);
+        toggleTypeahead(true);
       });
+      input.addEventListener('focus', () => {
+        const filtered = getFilteredDeployments(input.value);
+        renderDeploymentMenus(filtered);
+        toggleTypeahead(true);
+      });
+      input.addEventListener('blur', () => {
+        setTimeout(() => toggleTypeahead(false), 120);
+      });
+      const typeahead = document.getElementById('deploymentTypeahead');
+      typeahead.addEventListener('mousedown', (e) => e.preventDefault());
       // Initialize global time range
       const now = new Date();
       const tenAgo = new Date(now - 10 * 60000);
@@ -351,6 +392,14 @@
       }
     }
 
+    function formatHasAnySearchValue(raw) {
+      const trimmed = raw.trim();
+      if (!trimmed) return trimmed;
+      if (trimmed.includes('"')) return trimmed;
+      if (trimmed.includes(',')) return trimmed;
+      return `"${trimmed}"`;
+    }
+
     function generateExtendedQuery() {
       const validation = validateFields([
         { id: 'containerName', message: 'Please enter container name' },
@@ -367,7 +416,9 @@
       const containerName = document.getElementById('containerName').value.trim();
       const startTime = document.getElementById('globalStart').value;
       const endTime = document.getElementById('globalEnd').value;
-      const searchValue = document.getElementById('searchValue').value.trim();
+      const searchValue = formatHasAnySearchValue(
+        document.getElementById('searchValue').value
+      );
       const timeOffset = document.getElementById('timeOffset').value || '1';
       
       if (!startTime || !endTime) {

@@ -149,21 +149,20 @@
       <h2><img src="assets/icons/wrench_white.svg" alt="" style="width:28px;height:28px;margin-right:8px;vertical-align:middle;">Comma-Separated Formatter</h2>
       <p>Format values into a clean comma-separated string with quotes and removes duplicate entries for easier KQL search</p>
       
-      <div class="input-section">
+      <div class="input-section comma-formatter-section">
         <div class="input-wrapper">
           <textarea id="commaFormatterInput" rows="2" placeholder="Enter values separated by newlines..."></textarea>
+          <div class="comma-formatter-actions">
+            <label for="commaDelimiter" class="comma-delimiter-label">Quote delimiter</label>
+            <select id="commaDelimiter" class="comma-delimiter-select">
+              <option value="&quot;" selected>Double quote (")</option>
+              <option value="'">Single quote (')</option>
+            </select>
+            <button onclick="formatCommaSeparated()" class="analyze-btn">
+              <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
+            </button>
+          </div>
         </div>
-      </div>
-      
-      <div class="action-section comma-formatter-actions">
-        <label for="commaDelimiter" class="comma-delimiter-label">Quote delimiter</label>
-        <select id="commaDelimiter" class="comma-delimiter-select">
-          <option value="&quot;" selected>Double quote (")</option>
-          <option value="'">Single quote (')</option>
-        </select>
-        <button onclick="formatCommaSeparated()" class="analyze-btn">
-          <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
-        </button>
       </div>
       
       <div id="commaFormatterResult" class="result" style="font-family: 'Consolas', 'Monaco', monospace; text-align: left; min-height: 40px; padding: 15px; word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; max-height: none !important; overflow-y: visible !important; height: auto !important;"></div>
@@ -192,18 +191,18 @@
         <div style="flex: 1; display: flex; gap: 30px; align-items: center; flex-wrap: nowrap; min-width: 0; justify-content: flex-start;">
           <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
             <label style="font-size: 13px; margin: 0; white-space: nowrap; font-weight: 500; color: rgba(255, 255, 255, 0.9);">Indent</label>
-            <input id="jsonIndent" type="number" min="0" max="8" value="2" style="width: 70px; margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 13px; flex-shrink: 0;" />
+            <input id="jsonIndent" type="number" min="0" max="8" value="2" style="width: 70px; margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 12px; flex-shrink: 0;" />
           </div>
           <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
             <label style="font-size: 13px; margin: 0; white-space: nowrap; font-weight: 500; color: rgba(255, 255, 255, 0.9);">Ensure ASCII</label>
-            <select id="jsonAscii" style="margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 13px; cursor: pointer; width: 180px; flex-shrink: 0;">
+            <select id="jsonAscii" style="margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 12px; cursor: pointer; width: 180px; flex-shrink: 0;">
               <option value="false" selected>False (keep UTF‑8)</option>
               <option value="true">True (escape non‑ASCII)</option>
             </select>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
             <label style="font-size: 13px; margin: 0; white-space: nowrap; font-weight: 500; color: rgba(255, 255, 255, 0.9);">Mode</label>
-            <select id="jsonMode" style="margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 13px; cursor: pointer; width: 160px; flex-shrink: 0;">
+            <select id="jsonMode" style="margin: 0; padding: 8px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #ffffff; font-size: 12px; cursor: pointer; width: 160px; flex-shrink: 0;">
               <option value="pretty" selected>Pretty (spaced)</option>
               <option value="compact">Compact (one line)</option>
             </select>
@@ -300,59 +299,7 @@
     
     function copyResult() {
       const t = document.getElementById('result').textContent;
-      if (t && t !== 'Please enter a number' && !t.includes('too long')) {
-        const button = event.target.closest('button');
-        
-        // Function to show success feedback
-        const showSuccess = () => {
-          const originalText = button.innerHTML;
-          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-          button.style.background = '#2a2a2a';
-          button.style.color = '#ffffff';
-          setTimeout(() => {
-            button.innerHTML = originalText;
-            button.style.background = '';
-            button.style.color = '';
-          }, 2000);
-        };
-        
-        // Fallback method using execCommand
-        const fallbackCopy = () => {
-          const textArea = document.createElement('textarea');
-          textArea.value = t;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            if (successful) {
-              showSuccess();
-              return true;
-            }
-            return false;
-          } catch (err) {
-            document.body.removeChild(textArea);
-            return false;
-          }
-        };
-        
-        // Try modern clipboard API first
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(t).then(() => {
-            showSuccess();
-          }).catch(() => {
-            if (!fallbackCopy()) {
-              alert('Failed to copy to clipboard');
-            }
-          });
-        } else {
-          if (!fallbackCopy()) {
-            alert('Failed to copy to clipboard');
-          }
-        }
-      }
+      copyToClipboard(t, event.target.closest('button'));
     }
 
     // Comma-Separated Formatter functions
@@ -376,56 +323,7 @@
     
     function copyCommaFormatterResult() {
       const t = document.getElementById('commaFormatterResult').textContent;
-      if (t && !t.includes('Please enter') && !t.includes('No valid')) {
-        const button = event.target.closest('button');
-        
-        const showSuccess = () => {
-          const originalText = button.innerHTML;
-          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-          button.style.background = '#2a2a2a';
-          button.style.color = '#ffffff';
-          setTimeout(() => {
-            button.innerHTML = originalText;
-            button.style.background = '';
-            button.style.color = '';
-          }, 2000);
-        };
-        
-        const fallbackCopy = () => {
-          const textArea = document.createElement('textarea');
-          textArea.value = t;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            if (successful) {
-              showSuccess();
-              return true;
-            }
-            return false;
-          } catch (err) {
-            document.body.removeChild(textArea);
-            return false;
-          }
-        };
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(t).then(() => {
-            showSuccess();
-          }).catch(() => {
-            if (!fallbackCopy()) {
-              alert('Failed to copy to clipboard');
-            }
-          });
-        } else {
-          if (!fallbackCopy()) {
-            alert('Failed to copy to clipboard');
-          }
-        }
-      }
+      copyToClipboard(t, event.target.closest('button'));
     }
 
     // JSON Pretty Formatter functions
@@ -498,12 +396,7 @@
 
     function copyJSONOutput() {
       const text = jsonOutputEl.textContent;
-      if (!text) return;
-      navigator.clipboard.writeText(text).then(() => {
-        jsonStatusEl.innerHTML = '<span style="color: #4ade80;">📋 Copied to clipboard.</span>';
-      }).catch(() => {
-        jsonStatusEl.innerHTML = '<span style="color: #ff6b6b;">Copy failed. Select output and press Ctrl/Cmd+C.</span>';
-      });
+      copyToClipboard(text, document.getElementById('jsonCopyBtn'));
     }
 
     function downloadJSONOutput() {
@@ -518,7 +411,7 @@
       a.download = 'formatted.json';
       a.click();
       URL.revokeObjectURL(a.href);
-      jsonStatusEl.innerHTML = '<span style="color: #4ade80;">✓ Downloaded formatted.json</span>';
+      jsonStatusEl.innerHTML = '<span style="color: #4ade80;">Downloaded formatted.json</span>';
     }
 
     function clearJSONAll() {

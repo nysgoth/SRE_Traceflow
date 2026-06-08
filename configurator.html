@@ -7,12 +7,19 @@
   <link rel="stylesheet" href="assets/css/common.css">
   <link rel="stylesheet" href="assets/css/tools.css">
   <style>
-    .desc-content { max-width: 900px; margin: 12px auto 0; overflow: hidden; max-height: 0; opacity: 0; transition: max-height .35s ease, opacity .35s ease; }
-    .desc-content.open { max-height: 200px; opacity: 1; }
+    .desc-content {
+      max-width: 800px;
+      margin: 12px auto 0 auto;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.35s ease, opacity 0.35s ease;
+    }
+    .desc-content.open { max-height: 220px; opacity: 1; }
     .hero { text-align: center; }
-    body.configurator .container { max-width: 1200px; margin: 0 auto; }
     body.configurator .input-section { margin-bottom: 28px; }
     body.configurator .input-wrapper label { margin-bottom: 12px; }
+
     .config-actions {
       display: flex;
       flex-wrap: wrap;
@@ -21,27 +28,36 @@
     }
     .config-actions button,
     .config-actions label.config-file-btn {
-      flex: 1;
+      flex: 1 1 0;
       min-width: 140px;
-      padding: 12px 18px;
+      height: 58px;
+      margin: 0 !important;
+      padding: 0 18px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      background: #000000;
       color: #fff;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       text-align: center;
       transition: all 0.25s ease;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      box-sizing: border-box;
+      line-height: 1;
+      width: auto;
+      box-shadow: var(--neutral-btn-underglow);
     }
-    .config-actions button:hover,
-    .config-actions label.config-file-btn:hover {
-      background: rgba(255, 255, 255, 0.14);
+    .config-actions button:not(.save-btn):hover,
+    .config-actions label.config-file-btn:not(.save-btn):hover {
+      background: #1a1a1a;
       transform: translateY(-1px);
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        var(--neutral-btn-underglow-hover);
     }
     .config-actions .save-btn {
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -50,6 +66,11 @@
     }
     .config-actions .save-btn:hover {
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+    }
+    .config-actions .export-btn,
+    .config-actions .import-btn {
+      background: #000000;
+      border: none;
     }
     .config-file-btn input { display: none; }
     .config-status {
@@ -83,10 +104,10 @@
       margin-bottom: 12px;
     }
     .config-entry-group {
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 10px;
       overflow: hidden;
-      background: rgba(0, 0, 0, 0.12);
+      background: rgba(0, 0, 0, 0.35);
     }
     .config-entry-group-header {
       padding: 8px 12px;
@@ -130,7 +151,7 @@
       font-size: 13px;
     }
     .config-entry-row:hover {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.06);
     }
     .config-entry-row.is-default {
       background: rgba(102, 126, 234, 0.1);
@@ -220,11 +241,21 @@
     .add-entry-row input,
     .add-entry-row select {
       padding: 10px 12px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(18, 18, 20, 0.45);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 10px;
       color: #fff;
-      font-size: 14px;
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .add-entry-row input:focus,
+    .add-entry-row select:focus {
+      background: rgba(18, 18, 20, 0.55);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+      outline: none;
     }
     .add-entry-row input {
       flex: 1;
@@ -267,7 +298,7 @@
         </button>
       </div>
       <div id="pageDesc" class="desc-content open" aria-hidden="false">
-        <p>Manage databases and deployments in one list. Each entry has a type label and you pick the default per type for KQL queries across the app.</p>
+        <p> - Manage databases, deployments, and services in one list. Save stores entries in this browser, Export downloads traceflow-config.json, and Import loads a JSON template to edit before saving.</p>
       </div>
     </div>
 
@@ -281,7 +312,7 @@
             <select id="newEntryType"></select>
             <button type="button" id="addEntryBtn">Add</button>
           </div>
-          <div class="field-hint">Use the radio to set the default per type. Database → KQL table name. Deployment &amp; Service → container/service targets in query tools (browse list &amp; defaults).</div>
+          <div class="field-hint">Use the radio to set the default per type. Save applies in this browser only. Export downloads <code>traceflow-config.json</code>. Import is template-only — edit, then Save.</div>
         </div>
       </div>
 
@@ -289,16 +320,13 @@
         <button type="button" class="save-btn" id="saveConfigBtn">
           <img src="assets/icons/check_white.svg" alt="" width="14" height="14"> Save Configuration
         </button>
-        <button type="button" id="exportConfigBtn">
+        <button type="button" class="export-btn" id="exportConfigBtn">
           <img src="assets/icons/download_white.svg" alt="" width="14" height="14"> Export JSON
         </button>
-        <label class="config-file-btn" for="importConfigFile">
+        <label class="config-file-btn import-btn" for="importConfigFile">
           <img src="assets/icons/download_white.svg" alt="" width="14" height="14" style="transform: rotate(180deg);"> Import JSON
           <input type="file" id="importConfigFile" accept=".json,application/json">
         </label>
-        <button type="button" id="resetConfigBtn">
-          <img src="assets/icons/sync_white.svg" alt="" width="14" height="14"> Reset to Defaults
-        </button>
       </div>
 
       <div id="configStatus" class="config-status"></div>
@@ -484,33 +512,35 @@
         const db = TraceFlowConfig.getDatabaseTable();
         const dep = TraceFlowConfig.getDefaultEntry('Deployment')?.name || '—';
         const svc = TraceFlowConfig.getDefaultService() || '—';
-        showStatus(`Saved ${next.entries.length} entries. Defaults: Database "${db}", Deployment "${dep}", Service "${svc}".`, 'success');
+        showStatus(
+          `Saved ${next.entries.length} entries in this browser. Defaults: Database "${db}", Deployment "${dep}", Service "${svc}".`,
+          'success'
+        );
       };
 
       document.getElementById('exportConfigBtn').onclick = () => {
-        TraceFlowConfig.save(readForm());
-        TraceFlowConfig.exportToFile();
-        showStatus('Configuration exported as traceflow-config.json', 'success');
+        const config = readForm();
+        if (!config.entries.length) {
+          showStatus('Add at least one entry before exporting.', 'error');
+          return;
+        }
+        TraceFlowConfig.exportToFile(config);
+        showStatus('Exported traceflow-config.json', 'success');
       };
 
       document.getElementById('importConfigFile').onchange = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
         try {
-          const imported = await TraceFlowConfig.importFromFile(file);
+          const imported = await TraceFlowConfig.parseConfigFile(file);
           fillForm(imported);
-          showStatus(`Imported ${imported.entries.length} entries from ${file.name}`, 'success');
+          showStatus(`Loaded ${imported.entries.length} entries from ${file.name} as a template. Edit if needed, then Save Configuration.`, 'success');
         } catch {
           showStatus('Invalid configuration file. Expected JSON with an entries array.', 'error');
         }
         event.target.value = '';
       };
 
-      document.getElementById('resetConfigBtn').onclick = async () => {
-        const config = await TraceFlowConfig.resetToDefaults();
-        fillForm(config);
-        showStatus('Configuration reset to defaults from assets/traceflow-config.json', 'success');
-      };
     });
   </script>
 </body>

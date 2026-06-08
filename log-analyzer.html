@@ -447,17 +447,7 @@
       link.click();
       document.body.removeChild(link);
       
-      // Show success feedback
-      const button = event.target.closest('button');
-      const originalText = button.innerHTML;
-      button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Downloaded!';
-      button.style.background = '#2a2a2a';
-      button.style.color = '#ffffff';
-      setTimeout(() => {
-        button.innerHTML = originalText;
-        button.style.background = '';
-        button.style.color = '';
-      }, 2000);
+      showButtonFeedback(event.target.closest('button'), 'Downloaded!');
     }
 
     // Fullscreen functionality

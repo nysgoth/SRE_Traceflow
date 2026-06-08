@@ -31,8 +31,10 @@
     </div>
   </div>
 
-  <div class="wrapper">
-    <!-- Extended Search Container -->
+  <div class="wrapper query-tool-wrapper">
+    <div class="config-target-bar" id="configTargetBar">
+      <select id="configEntrySelect" class="config-target-select database" title="Query target"></select>
+    </div>
     <div class="container">
       <label for="containerName">Container Name:</label>
       <input type="text" id="containerName" placeholder="e.g., core-integration-service" value="core-integration-service">
@@ -54,7 +56,6 @@
       <div id="queryResult" class="result"></div>
     </div>
   </div>
-  </div>
 
   <script src="assets/js/common.js"></script>
   <script src="assets/js/config.js"></script>
@@ -70,10 +71,24 @@
         el.setAttribute('aria-hidden', 'false');
       }
     }
+    let selectedEntry = { name: '', type: 'Database' };
+
+    function initConfigTargetBar() {
+      const select = document.getElementById('configEntrySelect');
+      const containerInput = document.getElementById('containerName');
+      selectedEntry = TraceFlowConfig.initConfigEntrySelect(select, {
+        onChange: (entry) => {
+          selectedEntry = entry;
+          TraceFlowConfig.applyEntryToContainerInput(entry, containerInput);
+        },
+      }) || selectedEntry;
+    }
+
     // Initialize default time values
     document.addEventListener('DOMContentLoaded', async () => {
       await TraceFlowConfig.init();
       document.getElementById('containerName').value = TraceFlowConfig.getDefaultContainer();
+      initConfigTargetBar();
       initializeTimeInputs('startTime', 'endTime');
       document.getElementById('generateQuery').onclick = generateExtendedQuery;
       document.getElementById('copyQuery').onclick = copyExtendedQuery;
@@ -102,10 +117,11 @@
       const startUTC = new Date(startTime).toISOString();
       const endUTC = new Date(endTime).toISOString();
       
-      const dbTable = TraceFlowConfig.getDatabaseTable();
+      const dbTable = TraceFlowConfig.getQueryTableForEntry(selectedEntry);
+      const scopeFilter = TraceFlowConfig.getContainerFilterForEntry(selectedEntry);
       const query = `let container_name = "${containerName}";
 let time_range = ${dbTable}
-| where container_name has container_name
+| where container_name has container_name${scopeFilter}
 | where time_t between (datetime('${startUTC}') .. datetime('${endUTC}'))
 | where log contains "${searchValue}"
 | summarize min_timestamp = min(time_t), max_timestamp = max(time_t);

@@ -1,23 +1,30 @@
 // Common JavaScript functionality for SRE Helper Tool
 
+const BUTTON_FEEDBACK_ICON =
+  '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">';
+
+function showButtonFeedback(button, message = 'Copied!') {
+  if (!button) return;
+  const originalHTML = button.innerHTML;
+  const originalBackground = button.style.background;
+  const originalColor = button.style.color;
+  button.innerHTML = `${BUTTON_FEEDBACK_ICON} ${message}`;
+  button.style.background = '#2a2a2a';
+  button.style.color = '#ffffff';
+  setTimeout(() => {
+    button.innerHTML = originalHTML;
+    button.style.background = originalBackground;
+    button.style.color = originalColor;
+  }, 2000);
+}
+
 // Copy to clipboard with visual feedback and fallback for Windows compatibility
 function copyToClipboard(text, button) {
   if (!text || text.includes('Please') || text.includes('No valid')) {
     return;
   }
-  
-  // Function to show success feedback
-  const showSuccess = () => {
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-check"></i>Copied!';
-    button.style.background = '#2a2a2a';
-    button.style.color = '#ffffff';
-    setTimeout(() => {
-      button.innerHTML = originalText;
-      button.style.background = '';
-      button.style.color = '';
-    }, 2000);
-  };
+
+  const showSuccess = () => showButtonFeedback(button, 'Copied!');
   
   // Fallback method using execCommand (works better on some Windows systems)
   const fallbackCopy = () => {
@@ -110,6 +117,9 @@ function showSuccess(element, content) {
   element.textContent = content;
   element.style.color = '#ffffff';
   showSuccessAnimation(element);
+  requestAnimationFrame(() => {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 // Replace Font Awesome <i> with inline SVG use
@@ -389,20 +399,20 @@ function showSuccess(element, content) {
       case 'comma-separated':
         return `
           <p style="margin: 0 auto 20px auto; text-align: center; opacity: 0.8; max-width: 100%; width: 100%; display: block; font-size: 14px;">${utilities.find(u => u.id === utilityId).description}</p>
-          <div class="input-section">
+          <div class="input-section comma-formatter-section">
             <div class="input-wrapper">
               <textarea id="modal-commaFormatterInput" rows="2" placeholder="Enter values separated by newlines..."></textarea>
+              <div class="comma-formatter-actions">
+                <label for="modal-commaDelimiter" class="comma-delimiter-label">Quote delimiter</label>
+                <select id="modal-commaDelimiter" class="comma-delimiter-select">
+                  <option value="&quot;" selected>Double quote (")</option>
+                  <option value="'">Single quote (')</option>
+                </select>
+                <button onclick="modalFormatCommaSeparated()" class="analyze-btn">
+                  <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="action-section comma-formatter-actions">
-            <label for="modal-commaDelimiter" class="comma-delimiter-label">Quote delimiter</label>
-            <select id="modal-commaDelimiter" class="comma-delimiter-select">
-              <option value="&quot;" selected>Double quote (")</option>
-              <option value="'">Single quote (')</option>
-            </select>
-            <button onclick="modalFormatCommaSeparated()" class="analyze-btn">
-              <img src="assets/icons/wrench_white.svg" alt="" width="16" height="16"> Format
-            </button>
           </div>
           <div id="modal-commaFormatterResult" class="result" style="font-family: 'Consolas', 'Monaco', monospace; text-align: left; min-height: 40px; padding: 15px; word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; max-height: none !important; overflow-y: visible !important; height: auto !important;"></div>
           <div class="button-group">
@@ -523,17 +533,9 @@ function showSuccess(element, content) {
     const result = document.getElementById('modal-result');
     if (!result) return;
     const text = result.textContent;
+    const button = event.target.closest('button');
     if (text && text !== 'Please enter a number' && !text.includes('too long')) {
-      const button = event.target.closest('button');
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = button.innerHTML;
-        button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-        button.style.background = '#2a2a2a';
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.style.background = '';
-        }, 2000);
-      }).catch(() => alert('Failed to copy to clipboard'));
+      copyToClipboard(text, button);
     }
   };
 
@@ -581,17 +583,9 @@ function showSuccess(element, content) {
     const result = document.getElementById('modal-commaFormatterResult');
     if (!result) return;
     const text = result.textContent;
+    const button = event.target.closest('button');
     if (text && !text.includes('Please enter') && !text.includes('No valid')) {
-      const button = event.target.closest('button');
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = button.innerHTML;
-        button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-        button.style.background = '#2a2a2a';
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.style.background = '';
-        }, 2000);
-      }).catch(() => alert('Failed to copy to clipboard'));
+      copyToClipboard(text, button);
     }
   };
 
@@ -650,14 +644,9 @@ function showSuccess(element, content) {
     const output = document.getElementById('modal-jsonOutput');
     if (!output) return;
     const text = output.textContent;
+    const button = event.target.closest('button');
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-      const status = document.getElementById('modal-jsonStatus');
-      if (status) status.innerHTML = '<span style="color: #4ade80;">📋 Copied to clipboard.</span>';
-    }).catch(() => {
-      const status = document.getElementById('modal-jsonStatus');
-      if (status) status.innerHTML = '<span style="color: #ff6b6b;">Copy failed. Select output and press Ctrl/Cmd+C.</span>';
-    });
+    copyToClipboard(text, button);
   };
 
   window.modalDownloadJSON = function() {
@@ -676,7 +665,7 @@ function showSuccess(element, content) {
     a.click();
     URL.revokeObjectURL(a.href);
     const status = document.getElementById('modal-jsonStatus');
-    if (status) status.innerHTML = '<span style="color: #4ade80;">✓ Downloaded formatted.json</span>';
+    if (status) status.innerHTML = '<span style="color: #4ade80;">Downloaded formatted.json</span>';
   };
 
   window.modalClearJSON = function() {

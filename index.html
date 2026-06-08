@@ -13,7 +13,6 @@
 
   <div class="main-content">
     <div class="container" style="background: transparent; backdrop-filter: none; border: none; box-shadow: none;">
-      <div class="logo"></div>
       <h1><img src="assets/icons/sre_traceflow.png" alt="" style="width:80px;height:80px;margin-right:8px;vertical-align:middle;">SRE TraceFlow</h1>
       <p class="subtitle">Designed for Kubernetes microservice architecture and KQL queries for Azure Log Analytics</p>
       
@@ -51,7 +50,7 @@
       </a>
       
       <a href="interceptor.html" class="tool-card">
-        <img src="assets/icons/chart-line_white.svg" alt="" class="tool-icon" />
+        <img src="assets/icons/api_white.svg" alt="" class="tool-icon" />
         <div class="tool-title">Logging Interceptor</div>
         <div class="tool-description">
           Parse and analyze logging interceptor logs with filtering and trace ID tracking
@@ -67,88 +66,157 @@
       </a>
     </div>
 
-    <div class="getting-started">
-      <h3>Key Features</h3>
-      <div class="getting-started-content">
-        <div class="getting-started-step">
-          <div class="step-number-small">1</div>
-          <div class="step-content">
-            <strong>Kubernetes Optimized</strong>
-            <p>Designed specifically for Kubernetes microservice architecture log analysis and troubleshooting</p>
+    <section class="at-a-glance" aria-label="At a glance">
+      <p class="at-a-glance-eyebrow">At a glance</p>
+      <div class="glance-marquee">
+        <div class="glance-track">
+          <div class="glance-strip">
+            <article class="glance-card glance-card--azure">
+              <img src="assets/icons/map_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Kubernetes on Azure</h4>
+                <p class="glance-desc">Container-aware KQL with deployment filters and env-specific tables</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--trace">
+              <img src="assets/icons/link_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Trace to KQL</h4>
+                <p class="glance-desc">Extract IDs, format for has_any(), copy ready-to-run queries</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--logs">
+              <img src="assets/icons/search_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Log analysis</h4>
+                <p class="glance-desc">Keyword filtering, syntax highlighting, and exportable results</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--config">
+              <img src="assets/icons/settings_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Deploy-aware config</h4>
+                <p class="glance-desc">Map databases, services, and deployments per environment</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--time">
+              <img src="assets/icons/clock_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Time range presets</h4>
+                <p class="glance-desc">Quick windows from 15m to 30d or custom start/end for KQL</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--interceptor">
+              <img src="assets/icons/api_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Interceptor parsing</h4>
+                <p class="glance-desc">API request chains grouped by trace with status and response times</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--export">
+              <img src="assets/icons/copy_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Copy &amp; export</h4>
+                <p class="glance-desc">One-click query copy and filtered log download for handoffs</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--client">
+              <img src="assets/icons/id-card_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Client ID formatting</h4>
+                <p class="glance-desc">Pad IDs to 17 digits with leading zeros for database lookups</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--highlight">
+              <img src="assets/icons/check-circle_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Trace detection</h4>
+                <p class="glance-desc">Auto-highlight trace IDs and errors across large pasted log dumps</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--sync">
+              <img src="assets/icons/sync_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Extended search</h4>
+                <p class="glance-desc">Broader KQL templates with contains filters and container scoping</p>
+              </div>
+            </article>
           </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">2</div>
-          <div class="step-content">
-            <strong>Trace Formatting</strong>
-            <p>Convert trace identifiers into clean comma-separated strings compatible with Azure Log Analytics has_any() queries</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">3</div>
-          <div class="step-content">
-            <strong>KQL Query Generation</strong>
-            <p>Generate ready-to-use KQL queries for Azure Monitor with time range filtering and container-specific analysis</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">4</div>
-          <div class="step-content">
-            <strong>Log Analysis & Filtering</strong>
-            <p>Advanced keyword filtering with dynamic messages for error, warn, debug, and invalid log detection</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">5</div>
-          <div class="step-content">
-            <strong>Export & Download</strong>
-            <p>Export filtered log results and generated queries for further analysis or documentation</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">6</div>
-          <div class="step-content">
-            <strong>Modern Responsive UI</strong>
-            <p>Glassmorphism design with smooth animations and fully responsive layout for all devices</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">7</div>
-          <div class="step-content">
-            <strong>Time Range Management</strong>
-            <p>Flexible time range selection with presets and custom date ranges for precise log analysis windows</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">8</div>
-          <div class="step-content">
-            <strong>Syntax Highlighting</strong>
-            <p>Visual trace ID detection and syntax highlighting in log results for easier identification</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">9</div>
-          <div class="step-content">
-            <strong>Keyword Filtering</strong>
-            <p>Real-time keyword-based log filtering to quickly find relevant entries in large log datasets</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">10</div>
-          <div class="step-content">
-            <strong>Trace ID Detection</strong>
-            <p>Automatically identify and extract unique trace identifiers from log entries across distributed systems</p>
-          </div>
-        </div>
-        <div class="getting-started-step">
-          <div class="step-number-small">11</div>
-          <div class="step-content">
-            <strong>Client ID Auto-formatting</strong>
-            <p>Automatically format and pad client IDs to meet database requirements (17 digits) with leading zeros</p>
+          <div class="glance-strip" aria-hidden="true">
+            <article class="glance-card glance-card--azure">
+              <img src="assets/icons/map_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Kubernetes on Azure</h4>
+                <p class="glance-desc">Container-aware KQL with deployment filters and env-specific tables</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--trace">
+              <img src="assets/icons/link_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Trace to KQL</h4>
+                <p class="glance-desc">Extract IDs, format for has_any(), copy ready-to-run queries</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--logs">
+              <img src="assets/icons/search_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Log analysis</h4>
+                <p class="glance-desc">Keyword filtering, syntax highlighting, and exportable results</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--config">
+              <img src="assets/icons/settings_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Deploy-aware config</h4>
+                <p class="glance-desc">Map databases, services, and deployments per environment</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--time">
+              <img src="assets/icons/clock_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Time range presets</h4>
+                <p class="glance-desc">Quick windows from 15m to 30d or custom start/end for KQL</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--interceptor">
+              <img src="assets/icons/api_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Interceptor parsing</h4>
+                <p class="glance-desc">API request chains grouped by trace with status and response times</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--export">
+              <img src="assets/icons/copy_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Copy &amp; export</h4>
+                <p class="glance-desc">One-click query copy and filtered log download for handoffs</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--client">
+              <img src="assets/icons/id-card_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Client ID formatting</h4>
+                <p class="glance-desc">Pad IDs to 17 digits with leading zeros for database lookups</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--highlight">
+              <img src="assets/icons/check-circle_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Trace detection</h4>
+                <p class="glance-desc">Auto-highlight trace IDs and errors across large pasted log dumps</p>
+              </div>
+            </article>
+            <article class="glance-card glance-card--sync">
+              <img src="assets/icons/sync_white.svg" alt="" class="glance-icon" width="22" height="22" />
+              <div class="glance-body">
+                <h4 class="glance-title">Extended search</h4>
+                <p class="glance-desc">Broader KQL templates with contains filters and container scoping</p>
+              </div>
+            </article>
           </div>
         </div>
       </div>
-    </div>
+    </section>
     </div>
   </div>
 

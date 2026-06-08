@@ -31,16 +31,18 @@
       </div>
     </div>
 
+    <div class="wrapper query-tool-wrapper">
+    <div class="config-target-bar" id="configTargetBar">
+      <select id="configEntrySelect" class="config-target-select database" title="Query target"></select>
+    </div>
     <!-- Main Container -->
     <div class="container">
-      <div class="config-target-bar" id="configTargetBar">
-        <select id="configEntrySelect" class="config-target-select database" title="Database or Service"></select>
-      </div>
       <!-- Global Time Range Selector -->
       <div class="global-time-range">
         <div class="time-range-header">
           <div class="time-range-icon">
-            <img src="assets/icons/clock_white.svg" alt="" width="24" height="24">
+            <img src="assets/icons/clock_white.svg" alt="" width="20" height="20">
+            <div class="time-duration-display" id="timeDuration">24h</div>
           </div>
           <div class="time-range-header-content">
             <div class="time-range-title-row">
@@ -56,7 +58,6 @@
                 <button class="time-preset-btn" data-value="7d">7d</button>
                 <button class="time-preset-btn" data-value="30d">30d</button>
                 <button class="time-preset-btn" data-value="custom">Custom</button>
-                <div class="time-duration-display" id="timeDuration">24h</div>
               </div>
               <select id="timePreset" onchange="applyTimePreset()" class="time-preset-select" style="display:none;">
                 <option value="5m">Last 5 minutes</option>
@@ -100,6 +101,7 @@
       </div>
       
       <div id="kqlResult" class="result"></div>
+    </div>
     </div>
   </div>
 
@@ -308,66 +310,12 @@
 | project TraceID, container_name, log, time_t, Fail_Status_Description
 | order by time_t desc`;
       
-      out.textContent = q;
-      out.style.color = '#ffffff';
-      
-      // Show success animation
-      out.style.transform = 'scale(1.02)';
-      setTimeout(() => out.style.transform = 'scale(1)', 200);
+      showSuccess(out, q);
     }
 
     function copyKQLResult() {
       const t = document.getElementById('kqlResult').textContent;
-      if (t && !t.includes('Please fill') && !t.includes('Please enter')) {
-        const button = document.getElementById('copyBtn');
-        
-        const showSuccess = () => {
-          const originalText = button.innerHTML;
-          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-          button.style.background = '#2a2a2a';
-          button.style.color = '#ffffff';
-          setTimeout(() => {
-            button.innerHTML = originalText;
-            button.style.background = '';
-            button.style.color = '';
-          }, 2000);
-        };
-        
-        const fallbackCopy = () => {
-          const textArea = document.createElement('textarea');
-          textArea.value = t;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            if (successful) {
-              showSuccess();
-              return true;
-            }
-            return false;
-          } catch (err) {
-            document.body.removeChild(textArea);
-            return false;
-          }
-        };
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(t).then(() => {
-            showSuccess();
-          }).catch(() => {
-            if (!fallbackCopy()) {
-              alert('Failed to copy to clipboard');
-            }
-          });
-        } else {
-          if (!fallbackCopy()) {
-            alert('Failed to copy to clipboard');
-          }
-        }
-      }
+      copyToClipboard(t, document.getElementById('copyBtn'));
     }
   </script>
   <script src="assets/js/common.js"></script>

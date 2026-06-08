@@ -11,6 +11,193 @@
   .desc-content { max-width: 900px; margin:12px auto 0; overflow:hidden; max-height:0; opacity:0; transition:max-height .35s ease, opacity .35s ease; }
   .desc-content.open { max-height: 320px; opacity:1; }
   .hero { text-align: center; }
+  body.trace-extractor .step-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  body.trace-extractor .trace-wizard {
+    width: 100%;
+    max-width: 1200px;
+    margin: 8px auto 0;
+  }
+
+  body.trace-extractor .trace-wizard-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 24px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  body.trace-extractor .trace-wizard-step-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    white-space: nowrap;
+  }
+
+  body.trace-extractor .trace-wizard-step-btn:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  body.trace-extractor .trace-wizard-step-btn.active {
+    color: #ffffff;
+    background: rgba(102, 126, 234, 0.22);
+    border-color: rgba(102, 126, 234, 0.45);
+  }
+
+  body.trace-extractor .trace-wizard-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+  }
+
+  body.trace-extractor .trace-wizard-step-btn.active .trace-wizard-step-num {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+  }
+
+  body.trace-extractor .trace-wizard-connector {
+    flex: 1;
+    min-width: 24px;
+    max-width: 56px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.14);
+    margin: 0 6px;
+  }
+
+  body.trace-extractor .trace-wizard-stage {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+  }
+
+  body.trace-extractor .trace-wizard-page {
+    width: 100%;
+  }
+
+  body.trace-extractor .trace-wizard-page.hidden {
+    display: none !important;
+  }
+
+  body.trace-extractor .trace-wizard-page.active {
+    animation: traceWizardPageIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes traceWizardPageIn {
+    from {
+      opacity: 0;
+      transform: translateX(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    body.trace-extractor .trace-wizard-progress {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    body.trace-extractor .trace-wizard-connector {
+      width: 1px;
+      height: 16px;
+      min-width: 0;
+      max-width: none;
+      margin: 0 auto;
+    }
+
+    body.trace-extractor .trace-wizard-step-btn {
+      justify-content: flex-start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body.trace-extractor .trace-wizard-page.active {
+      animation: none;
+    }
+  }
+
+  body.trace-extractor .step3-guidance {
+    width: 100%;
+    margin: 0 0 22px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 3px solid rgba(102, 126, 234, 0.65);
+    background: rgba(255, 255, 255, 0.04);
+    text-align: left;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  body.trace-extractor .step3-guidance p {
+    margin: 0;
+  }
+
+  body.trace-extractor .step3-guidance strong {
+    color: #ffffff;
+  }
+
+  body.trace-extractor .step3-guidance--warn {
+    border-left-color: #ffb74d;
+    background: rgba(255, 183, 77, 0.08);
+  }
+
+  body.trace-extractor .step3-guidance--ok {
+    border-left-color: #81c784;
+  }
+
+  body.trace-extractor .step3-tool-compare {
+    margin: 12px 0 0;
+    padding-left: 20px;
+  }
+
+  body.trace-extractor .step3-tool-compare li {
+    margin-bottom: 8px;
+  }
+
+  body.trace-extractor .step3-tool-compare li:last-child {
+    margin-bottom: 0;
+  }
+
+  body.trace-extractor .step3-tools--locked {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  body.trace-extractor #vals2 {
+    min-height: 88px;
+    max-height: 120px;
+    resize: vertical;
+  }
+
 </style>
 </head>
 <body class="trace-extractor">
@@ -31,11 +218,32 @@
     </div>
   </div>
 
+    <div class="trace-wizard">
+      <nav class="trace-wizard-progress" aria-label="Trace extractor steps">
+        <button type="button" class="trace-wizard-step-btn active" data-step="1" onclick="goToStep(1)">
+          <span class="trace-wizard-step-num">1</span>
+          <span class="trace-wizard-step-label">Extract Traces</span>
+        </button>
+        <span class="trace-wizard-connector" aria-hidden="true"></span>
+        <button type="button" class="trace-wizard-step-btn" data-step="2" onclick="goToStep(2)">
+          <span class="trace-wizard-step-num">2</span>
+          <span class="trace-wizard-step-label">Extract Logs</span>
+        </button>
+        <span class="trace-wizard-connector" aria-hidden="true"></span>
+        <button type="button" class="trace-wizard-step-btn" data-step="3" onclick="goToStep(3)">
+          <span class="trace-wizard-step-num">3</span>
+          <span class="trace-wizard-step-label">Analyze Logs</span>
+        </button>
+      </nav>
+
+      <div class="trace-wizard-stage">
     <!-- Step 1: Extract Traces -->
-    <div class="container step-container" id="step1">
+    <div class="trace-wizard-page active" id="step1">
+    <div class="query-tool-wrapper">
       <div class="config-target-bar" id="configTargetBar">
-        <select id="configEntrySelect" class="config-target-select database" title="Database or Service"></select>
+        <select id="configEntrySelect" class="config-target-select database" title="Query target"></select>
       </div>
+      <div class="container step-container">
       <div class="step-header">
         <div class="step-number">
           <img src="assets/icons/link_white.svg" alt="" width="24" height="24">
@@ -50,7 +258,8 @@
       <div class="global-time-range">
         <div class="time-range-header">
           <div class="time-range-icon">
-            <img src="assets/icons/clock_white.svg" alt="" width="24" height="24">
+            <img src="assets/icons/clock_white.svg" alt="" width="20" height="20">
+            <div class="time-duration-display" id="timeDuration">24h</div>
           </div>
           <div class="time-range-header-content">
             <div class="time-range-title-row">
@@ -66,7 +275,6 @@
                 <button class="time-preset-btn" data-value="7d">7d</button>
                 <button class="time-preset-btn" data-value="30d">30d</button>
                 <button class="time-preset-btn" data-value="custom">Custom</button>
-                <div class="time-duration-display" id="timeDuration">24h</div>
               </div>
               <select id="timePreset" onchange="applyTimePreset()" class="time-preset-select" style="display:none;">
                 <option value="5m">Last 5 minutes</option>
@@ -109,15 +317,18 @@
       <div id="out1" class="result"></div>
       
       <div class="button-group" style="margin-top: 15px;">
-        <button class="copy" id="cpy1"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result</button>
+        <button class="copy" id="cpy1" style="display:none;"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result</button>
         <button onclick="goToStep(2)" class="analyze-btn" id="nextToStep2" style="display:none;">
           <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14" style="transform: rotate(180deg);"> Next Step
         </button>
       </div>
+      </div>
+    </div>
     </div>
 
     <!-- Step 2: Extract Logs -->
-    <div class="container step-container hidden" id="step2">
+    <div class="trace-wizard-page hidden" id="step2">
+    <div class="container step-container">
       <div class="step-header">
         <div class="step-number">
           <img src="assets/icons/map_white.svg" alt="" width="24" height="24">
@@ -131,7 +342,7 @@
       <div class="input-section">
         <div class="input-wrapper">
           <label for="vals2">Trace Values</label>
-          <textarea id="vals2" rows="8" placeholder="Paste the traces extracted from Azure Log Analytics...&#10;&#10;Example:&#10;a1b2c3d4e5f6&#10;x9y8z7w6v5u4&#10;m3n2o1p0q9r8"></textarea>
+          <textarea id="vals2" rows="4" placeholder="Paste trace IDs from Azure Log Analytics (one per line), e.g. a1b2c3d4e5f6"></textarea>
         </div>
       </div>
       
@@ -144,7 +355,7 @@
       <div id="out2" class="result"></div>
       
       <div class="button-group" style="margin-top: 15px;">
-        <button class="copy" id="cpy2"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result</button>
+        <button class="copy" id="cpy2" style="display:none;"><img src="assets/icons/copy_white.svg" alt="" width="14" height="14"> Copy Result</button>
         <button onclick="goToStep(1)" class="back-btn">
           <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14"> Back
         </button>
@@ -153,22 +364,32 @@
         </button>
       </div>
     </div>
+    </div>
 
     <!-- Step 3: Analyze Logs -->
-    <div class="container step-container hidden" id="step3">
+    <div class="trace-wizard-page hidden" id="step3">
+    <div class="container step-container">
       <div class="step-header">
         <div class="step-number">
           <img src="assets/icons/chart-line_white.svg" alt="" width="24" height="24">
         </div>
         <div class="step-header-content">
           <div class="step-title">Analyze Logs</div>
-          <div class="step-description">Advanced log analysis with keyword filtering, syntax highlighting, and trace ID detection for comprehensive log investigation.</div>
+          <div class="step-description">Paste your Azure query results into Log Analyzer or Interceptor depending on what you need to inspect.</div>
         </div>
       </div>
+
+      <div id="step3Guidance" class="step3-guidance step3-guidance--warn" role="status">
+        <p><strong>Checking Step 2…</strong></p>
+      </div>
       
-      <div class="action-section">
+      <div class="action-section tool-redirect-row" id="step3Tools">
         <a href="log-analyzer.html" class="tool-redirect-btn">
           <img src="assets/icons/chart-line_white.svg" alt="" width="16" height="16"> Open Log Analyzer
+        </a>
+        <span class="tool-redirect-or">or</span>
+        <a href="interceptor.html" class="tool-redirect-btn">
+          <img src="assets/icons/api_white.svg" alt="" width="16" height="16"> Open Interceptor
         </a>
       </div>
       
@@ -176,6 +397,9 @@
         <button onclick="goToStep(2)" class="back-btn">
           <img src="assets/icons/arrow-left_white.svg" alt="" width="14" height="14"> Back
         </button>
+      </div>
+    </div>
+    </div>
       </div>
     </div>
   </div>
@@ -194,20 +418,66 @@
       }
     }
     
-    // Step navigation
-    function goToStep(stepNumber) {
-      for (let i = 1; i <= 3; i++) {
-        const step = document.getElementById(`step${i}`);
-        if (step) {
-          step.classList.add('hidden');
-        }
+    function isStep2Complete() {
+      const out2 = document.getElementById('out2');
+      const query = out2?.textContent?.trim() || '';
+      return (
+        query.length > 0 &&
+        !query.includes('Please fill') &&
+        !query.includes('No valid')
+      );
+    }
+
+    function updateStep3Guidance() {
+      const guidance = document.getElementById('step3Guidance');
+      const tools = document.getElementById('step3Tools');
+      if (!guidance) return;
+
+      if (!isStep2Complete()) {
+        guidance.className = 'step3-guidance step3-guidance--warn';
+        guidance.innerHTML =
+          '<p><strong>Step 2 is not complete.</strong> Go back, paste your trace values, and generate the KQL query first. You need that query run in Azure Log Analytics before you can analyze the results here.</p>';
+        tools?.classList.add('step3-tools--locked');
+        return;
       }
-      
+
+      guidance.className = 'step3-guidance step3-guidance--ok';
+      guidance.innerHTML =
+        '<p><strong>Step 2 is complete.</strong> Run the KQL query in Azure Log Analytics, copy the results, then open one of the tools below and paste them in.</p>' +
+        '<ul class="step3-tool-compare">' +
+        '<li><strong>Log Analyzer</strong> — paste full log lines to search, filter, and highlight across the entire log entry.</li>' +
+        '<li><strong>Interceptor</strong> — paste interceptor output to view API request and response chains, with status codes and response times.</li>' +
+        '</ul>';
+      tools?.classList.remove('step3-tools--locked');
+    }
+
+    // Step navigation — one wizard page visible at a time
+    function goToStep(stepNumber) {
+      document.querySelectorAll('.trace-wizard-page').forEach((page) => {
+        page.classList.add('hidden');
+        page.classList.remove('active');
+      });
+
+      document.querySelectorAll('.trace-wizard-step-btn').forEach((btn) => {
+        btn.classList.remove('active');
+      });
+
       const targetStep = document.getElementById(`step${stepNumber}`);
+      const targetBtn = document.querySelector(`.trace-wizard-step-btn[data-step="${stepNumber}"]`);
+
       if (targetStep) {
         targetStep.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        targetStep.classList.add('active');
       }
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+      }
+
+      if (stepNumber === 3) {
+        updateStep3Guidance();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     let selectedEntry = { name: '', type: 'Database' };
@@ -252,20 +522,12 @@
       document.getElementById('globalStart').addEventListener('change', updateDuration);
       document.getElementById('globalEnd').addEventListener('change', updateDuration);
 
-      document.getElementById('gen1').onclick=()=>{
-        generate(1,false);
-        // Show next button after successful generation
-        const out1 = document.getElementById('out1');
-        if (out1 && out1.textContent && !out1.textContent.includes('Please fill')) {
-          document.getElementById('nextToStep2').style.display = 'inline-flex';
-        }
-      };
+      document.getElementById('gen1').onclick=()=>generate(1,false);
       document.getElementById('cpy1').onclick=()=>copyOut(1);
       document.getElementById('gen2').onclick=()=>{
         generate(2,true);
-        const out2 = document.getElementById('out2');
-        if (out2 && out2.textContent && !out2.textContent.includes('Please fill') && !out2.textContent.includes('No valid')) {
-          document.getElementById('nextToStep3').style.display = 'inline-flex';
+        if (!document.getElementById('step3')?.classList.contains('hidden')) {
+          updateStep3Guidance();
         }
       };
       document.getElementById('cpy2').onclick=()=>copyOut(2);
@@ -377,6 +639,25 @@
       }
     }
 
+    function hasCopyableResult(out) {
+      const text = out?.textContent?.trim();
+      if (!text) return false;
+      return !text.includes('Please fill') && !text.includes('No valid');
+    }
+
+    function updateResultActions(idx) {
+      const out = document.getElementById('out' + idx);
+      const copyBtn = document.getElementById('cpy' + idx);
+      const nextBtn = idx === 1
+        ? document.getElementById('nextToStep2')
+        : document.getElementById('nextToStep3');
+      const canCopy = hasCopyableResult(out);
+      const display = canCopy ? 'inline-flex' : 'none';
+
+      if (copyBtn) copyBtn.style.display = display;
+      if (nextBtn) nextBtn.style.display = display;
+    }
+
     function generate(idx,extended){
       const s=document.getElementById('globalStart').value,
             e=document.getElementById('globalEnd').value,
@@ -385,6 +666,7 @@
       if(!s||!e||!r) {
         out.textContent='Please fill all fields and set time range';
         out.style.color='#ff6b6b';
+        updateResultActions(idx);
         return;
       }
       const sUTC=new Date(s).toISOString(),
@@ -398,6 +680,7 @@
         if (lines.length === 0) {
           out.textContent = 'No valid trace values found';
           out.style.color = '#ff6b6b';
+          updateResultActions(idx);
           return;
         }
         list = lines.map(l => `"${l}"`).join(', ');
@@ -419,60 +702,18 @@
       // Show success animation
       out.style.transform='scale(1.02)';
       setTimeout(()=>out.style.transform='scale(1)', 200);
+
+      requestAnimationFrame(() => {
+        out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      updateResultActions(idx);
     }
 
     function copyOut(idx){
       const t=document.getElementById('out'+idx).textContent;
-      if(t && !t.includes('Please fill') && !t.includes('Start time')) {
-          const button = event.target.closest('button');
-        
-        const showSuccess = () => {
-          const originalText = button.innerHTML;
-          button.innerHTML = '<img src="assets/icons/check_white.svg" alt="" width="14" height="14">✓ Copied!';
-          button.style.background = '#2a2a2a';
-          button.style.color = '#ffffff';
-          setTimeout(() => {
-            button.innerHTML = originalText;
-            button.style.background = '';
-            button.style.color = '';
-          }, 2000);
-        };
-        
-        const fallbackCopy = () => {
-          const textArea = document.createElement('textarea');
-          textArea.value = t;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            if (successful) {
-              showSuccess();
-              return true;
-            }
-            return false;
-          } catch (err) {
-            document.body.removeChild(textArea);
-            return false;
-          }
-        };
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(t).then(() => {
-            showSuccess();
-        }).catch(() => {
-            if (!fallbackCopy()) {
-          alert('Failed to copy to clipboard');
-            }
-        });
-        } else {
-          if (!fallbackCopy()) {
-            alert('Failed to copy to clipboard');
-          }
-        }
-      }
+      const button = event.target.closest('button');
+      copyToClipboard(t, button);
     }
   </script>
   <script src="assets/js/common.js"></script>
